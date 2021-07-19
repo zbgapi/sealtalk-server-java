@@ -3,9 +3,9 @@ package com.rcloud.server.sealtalk.configuration;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.sql.DataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -14,6 +14,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import tk.mybatis.spring.annotation.MapperScan;
+
+import javax.sql.DataSource;
 
 /**
  * @Author: xiuwei.nie
@@ -21,6 +24,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  * @Description:
  * @Copyright (c) 2020, rongcloud.cn All Rights Reserved
  */
+@MapperScan(basePackages = "com.rcloud.server.sealtalk.dao", sqlSessionTemplateRef  = Beans.SEALTALK_SQL_SESSION_TEMPLATE)
 public class SingleDataSourceConfiguration {
 
     public static final int DEFAULT_STATEMENT_TIMEOUT = 10000;
@@ -75,8 +79,14 @@ public class SingleDataSourceConfiguration {
         sessionFactory.setConfiguration(configuration);
 
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        sessionFactory.setMapperLocations(resolver.getResources("classpath:mybatis/*.xml"));
+        sessionFactory.setMapperLocations(resolver.getResources("classpath:mybatis/sealtalk/*.xml"));
         sessionFactory.setTypeAliasesPackage("com.rcloud.server.sealtalk.domain");
         return sessionFactory.getObject();
+    }
+
+
+    @Bean(name = Beans.SEALTALK_SQL_SESSION_TEMPLATE)
+    public SqlSessionTemplate sealtalkSqlSessionTemplate(@Qualifier(Beans.SEALTALK_SQL_SESSION_FACTORY) SqlSessionFactory sqlSessionFactory) throws Exception {
+        return new SqlSessionTemplate(sqlSessionFactory);
     }
 }

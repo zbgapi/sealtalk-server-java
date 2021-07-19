@@ -30,7 +30,9 @@ public class Users implements Serializable {
     private Integer id;
 
     private String region;
-
+    /**
+     * 对接zbg，这个字段对应zbg的userId
+     */
     private String phone;
 
     private String nickname;

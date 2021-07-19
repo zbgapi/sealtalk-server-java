@@ -11,4 +11,10 @@ public class Beans {
     public static final String SEALTALK_DATASOURCE = "sealtalk.data.source";
     public static final String SEALTALK_SQL_SESSION_FACTORY = "sealtalk.sqlSessionFactory";
     public static final String SEALTALK_DATASOURCE_PROPERTIES = "sealtalk.datasource.properties";
+    public static final String SEALTALK_SQL_SESSION_TEMPLATE = "sealtalk.SqlSessionTemplate";
+
+    public static final String EXCHANGE_DATASOURCE = "exchange.data.source";
+    public static final String EXCHANGE_SQL_SESSION_FACTORY = "exchange.sqlSessionFactory";
+    public static final String EXCHANGE_DATASOURCE_PROPERTIES = "exchange.datasource.properties";
+    public static final String EXCHANGE_SQL_SESSION_TEMPLATE = "exchange.SqlSessionTemplate";
 }

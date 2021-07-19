@@ -9,6 +9,8 @@ import com.rcloud.server.sealtalk.constant.ErrorCode;
 import com.rcloud.server.sealtalk.constant.SmsServiceType;
 import com.rcloud.server.sealtalk.domain.*;
 import com.rcloud.server.sealtalk.exception.ServiceException;
+import com.rcloud.server.sealtalk.exchange.domain.EcUser;
+import com.rcloud.server.sealtalk.exchange.service.EcUserService;
 import com.rcloud.server.sealtalk.model.ServerApiParams;
 import com.rcloud.server.sealtalk.model.dto.sync.*;
 import com.rcloud.server.sealtalk.rongcloud.RongCloudClient;
@@ -81,6 +83,9 @@ public class UserManager extends BaseManager {
 
     @Resource
     private GroupFavsService groupFavsService;
+
+    @Resource
+    private EcUserService ecUsersService;
 
     @Value("classpath:region.json")
     private org.springframework.core.io.Resource regionResource;
@@ -281,7 +286,7 @@ public class UserManager extends BaseManager {
         int salt = RandomUtil.randomBetween(1000, 9999);
         String hashStr = MiscUtils.hash(password, salt);
 
-        Users u = register0(nickname, verificationCodes.getRegion(), verificationCodes.getPhone(), salt, hashStr);
+        Users u = register0(nickname, null, verificationCodes.getRegion(), verificationCodes.getPhone(), salt, hashStr);
 
         //缓存nickname
         CacheUtil.set(CacheUtil.NICK_NAME_CACHE_PREFIX + u.getId(), u.getNickname());
@@ -300,7 +305,7 @@ public class UserManager extends BaseManager {
      * @param hashStr
      * @return
      */
-    private Users register0(String nickname, String region, String phone, int salt, String hashStr) {
+    private Users register0(String nickname, String portraitUri, String region, String phone, int salt, String hashStr) {
         return transactionTemplate.execute(new TransactionCallback<Users>() {
             @Override
             public Users doInTransaction(TransactionStatus transactionStatus) {
@@ -313,7 +318,7 @@ public class UserManager extends BaseManager {
                 u.setPasswordSalt(String.valueOf(salt));
                 u.setCreatedAt(new Date());
                 u.setUpdatedAt(u.getCreatedAt());
-                u.setPortraitUri(sealtalkConfig.getRongcloudDefaultPortraitUrl());
+                u.setPortraitUri(StringUtils.isEmpty(portraitUri) ? sealtalkConfig.getRongcloudDefaultPortraitUrl() : portraitUri);
 
                 usersService.saveSelective(u);
 
@@ -328,6 +333,7 @@ public class UserManager extends BaseManager {
         });
 
     }
+
 
     /**
      * 用户登录
@@ -345,17 +351,26 @@ public class UserManager extends BaseManager {
         param.setPhone(phone);
         Users u = usersService.getOne(param);
 
-        //判断用户是否存在
+        //判断用户是否存在，不存在则创建一个
         if (u == null) {
-            throw new ServiceException(ErrorCode.USER_NOT_EXIST);
+            int salt = RandomUtil.randomBetween(1000, 9999);
+            String hashStr = MiscUtils.hash(password, salt);
+
+            EcUser ecUser = ecUsersService.getUser(phone);
+            if (ecUser == null) {
+                throw new ServiceException(ErrorCode.USER_NOT_EXIST);
+            }
+            String nickname = StringUtils.isEmpty(ecUser.getNickName()) ? ecUser.getLoginName() : ecUser.getNickName();
+
+            u = register0(nickname, ecUser.getHeadImg(), region, phone, salt, hashStr);
         }
 
         //校验密码是否正确
-        String passwordHash = MiscUtils.hash(password, Integer.valueOf(u.getPasswordSalt()));
-
-        if (!passwordHash.equals(u.getPasswordHash())) {
-            throw new ServiceException(ErrorCode.USER_PASSWORD_WRONG);
-        }
+//        String passwordHash = MiscUtils.hash(password, Integer.parseInt(u.getPasswordSalt()));
+//
+//        if (passwordHash != null && !passwordHash.equals(u.getPasswordHash())) {
+//            throw new ServiceException(ErrorCode.USER_PASSWORD_WRONG);
+//        }
 
         log.info("login id:" + u.getId() + " nickname:" + u.getNickname());
         //缓存nickname

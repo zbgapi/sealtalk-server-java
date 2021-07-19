@@ -192,7 +192,7 @@ public class UserController extends BaseController {
      * 10、返回注册成功，200，用户主键Id编码
      */
     @ApiOperation(value = "注册新用户")
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
+//    @RequestMapping(value = "/register", method = RequestMethod.POST)
     public APIResult<Object> register(@RequestBody UserParam userParam, HttpServletResponse response) throws ServiceException {
         String nickname = userParam.getNickname();
         String password = userParam.getPassword();
@@ -230,17 +230,17 @@ public class UserController extends BaseController {
     public APIResult<Object> login(@RequestBody UserParam userParam, HttpServletResponse response) throws ServiceException {
         String region = userParam.getRegion();
         String phone = userParam.getPhone();
-        String password = userParam.getPassword();
+//        String password = userParam.getPassword();
 
         ValidateUtils.notEmpty(region);
         ValidateUtils.notEmpty(phone);
-        ValidateUtils.notEmpty(password);
+//        ValidateUtils.notEmpty(password);
 
         region = MiscUtils.removeRegionPrefix(region);
 //        ValidateUtils.checkRegionName(MiscUtils.getRegionName(region));
-        ValidateUtils.checkCompletePhone(phone);
+//        ValidateUtils.checkCompletePhone(phone);
 
-        Pair<Integer, String> pairResult = userManager.login(region, phone, password);
+        Pair<Integer, String> pairResult = userManager.login(region, phone, "pwd123456");
 
         //设置cookie  userId加密存入cookie
         //登录成功后的其他请求，当前登录用户useId获取从cookie中获取

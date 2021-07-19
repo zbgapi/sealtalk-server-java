@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
  * @Copyright (c) 2020, rongcloud.cn All Rights Reserved
  */
 @Configuration
-@Import({SingleDataSourceConfiguration.class})
+@Import({SingleDataSourceConfiguration.class, ExchangeDataSourceConfiguration.class})
 @ComponentScans({@ComponentScan("com.rcloud.server.sealtalk.*")})
 public class AppConfiguration {
 

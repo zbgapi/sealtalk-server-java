@@ -52,7 +52,7 @@ public class SealtalkConfig {
 //    @Value("${sealtalk-config.yunpian_send_sms_uri}")
 //    private String yunpianSendSmsUri;
 //    @Value("${sealtalk-config.yunpian_get_tpl_uri}")
-    private String yunpianGetTplUri;
+//    private String yunpianGetTplUri;
     @Value("${sealtalk-config.yunpian_limited_time:1}")//限制小时
     private Integer yunpianLimitedTime;
     @Value("${sealtalk-config.yunpian_limited_count:20}")//限制次数
@@ -67,4 +67,7 @@ public class SealtalkConfig {
 
     @Value("${sealtalk-config.exclude_url}")
     private String excludeUrl;
+
+    @Value("${sealtalk-config.max_members:500}")//限制群成员数量
+    private Integer maxMembers;
 }
