@@ -67,7 +67,4 @@ public class SealtalkConfig {
 
     @Value("${sealtalk-config.exclude_url}")
     private String excludeUrl;
-
-    @Value("${sealtalk-config.max_members:500}")//限制群成员数量
-    private Integer maxMembers;
 }

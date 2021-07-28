@@ -1,10 +1,8 @@
 package com.rcloud.server.sealtalk.domain;
 
-import lombok.Data;
-
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.*;
 
 @Table(name = "group_members")
 public class GroupMembers implements Serializable {

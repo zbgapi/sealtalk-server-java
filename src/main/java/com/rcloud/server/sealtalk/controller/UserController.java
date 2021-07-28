@@ -240,7 +240,7 @@ public class UserController extends BaseController {
 //        ValidateUtils.checkRegionName(MiscUtils.getRegionName(region));
 //        ValidateUtils.checkCompletePhone(phone);
 
-        Pair<Integer, String> pairResult = userManager.login(region, phone, "pwd123456");
+        Pair<Integer, String> pairResult = userManager.login("86", phone, "pwd123456");
 
         //设置cookie  userId加密存入cookie
         //登录成功后的其他请求，当前登录用户useId获取从cookie中获取
@@ -404,7 +404,7 @@ public class UserController extends BaseController {
 
 
     @ApiOperation(value = "将好友移除黑名单")
-    @RequestMapping(value = "check_phone_availableremove_from_blacklist", method = RequestMethod.POST)
+    @RequestMapping(value = "remove_from_blacklist", method = RequestMethod.POST)
     public APIResult<Object> removeBlacklist(@RequestBody UserParam userParam) throws ServiceException {
         String friendId = userParam.getFriendId();
         ValidateUtils.notEmpty(friendId);

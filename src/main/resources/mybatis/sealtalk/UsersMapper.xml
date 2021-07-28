@@ -26,4 +26,33 @@
     <result column="updatedAt" jdbcType="TIMESTAMP" property="updatedAt" />
     <result column="deletedAt" jdbcType="TIMESTAMP" property="deletedAt" />
   </resultMap>
+
+  <insert id ="insertBatch"  keyProperty="id" useGeneratedKeys="true" parameterType="java.util.List" >
+    insert ignore into users
+    (
+    region,
+    phone,
+    nickname,
+    portraitUri ,
+    passwordHash,
+    passwordSalt,
+    gender,
+    createdAt,
+    updatedAt
+    )
+    values
+    <foreach collection ="usersList" item="u" index= "index" separator =",">
+      (
+      #{u.region,jdbcType=VARCHAR},
+      #{u.phone,jdbcType=VARCHAR},
+      #{u.nickname,jdbcType=VARCHAR},
+      #{u.portraitUri,jdbcType=VARCHAR},
+      #{u.passwordHash,jdbcType=CHAR},
+      #{u.passwordSalt,jdbcType=CHAR},
+      #{u.gender,jdbcType=VARCHAR},
+      #{u.createdAt,jdbcType=TIMESTAMP},
+      #{u.updatedAt,jdbcType=TIMESTAMP}
+      )
+    </foreach >
+  </insert >
 </mapper>

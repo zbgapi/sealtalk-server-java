@@ -9,8 +9,11 @@ import com.rcloud.server.sealtalk.exchange.domain.Merchant;
 import javafx.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class EcUserService {
@@ -38,5 +41,34 @@ public class EcUserService {
         }
 
         return ecUser;
+    }
+
+    public List<EcUser> getUsers(List<String> userIdList) throws ServiceException {
+        if (userIdList.isEmpty()) {
+            throw new ServiceException(ErrorCode.PARAM_ERROR);
+        }
+
+        Example model = new Example(EcUser.class);
+        model.createCriteria().andIn("userId", userIdList);
+
+        List<EcUser> userList = ecUserMapper.selectByExample(model);
+
+        if (userList.isEmpty()) {
+            throw new ServiceException(ErrorCode.PARAM_ERROR);
+        }
+        Example model2 = new Example(Merchant.class);
+        model2.createCriteria().andIn("userId", userIdList);
+        List<Merchant> merchantList = merchantMapper.selectByExample(model2);
+        for (Merchant merchant : merchantList) {
+            for (EcUser ecUser : userList) {
+                if (merchant.getUserId().equals(ecUser.getUserId())) {
+                    ecUser.setNickName(merchant.getNickName());
+                    ecUser.setHeadImg(merchant.getHeadUrl());
+                    break;
+                }
+            }
+        }
+
+        return userList;
     }
 }

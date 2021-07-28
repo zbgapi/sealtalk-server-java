@@ -2,12 +2,14 @@ package com.rcloud.server.sealtalk.service;
 
 import com.rcloud.server.sealtalk.dao.GroupsMapper;
 import com.rcloud.server.sealtalk.domain.Groups;
+import com.rcloud.server.sealtalk.model.dto.GroupAdminDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import tk.mybatis.mapper.common.Mapper;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @Author: xiuwei.nie
@@ -63,5 +65,9 @@ public class GroupsService extends AbstractBaseService<Groups, Integer> {
         groups.setTimestamp(timestamp);
         groups.setCreatorId(creatorId);
         this.updateByPrimaryKeySelective(groups);
+    }
+
+    public List<GroupAdminDTO> selectGroupsForAdmin(String name, String creatorUid, Integer referFlag, Integer hotFlag) {
+        return mapper.selectGroupsForAdmin(name, creatorUid, referFlag, hotFlag);
     }
 }

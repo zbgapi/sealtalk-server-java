@@ -10,5 +10,7 @@
     <result column="head_img" jdbcType="VARCHAR" property="headImg" />
     <result column="login_name" jdbcType="VARCHAR" property="loginName" />
     <result column="phone" jdbcType="VARCHAR" property="phone" />
+    <result column="country_code" jdbcType="VARCHAR" property="countryCode" />
+    <result column="sex" jdbcType="INTEGER" property="sex" />
   </resultMap>
 </mapper>

@@ -13,15 +13,13 @@ import io.rong.methods.message._private.Private;
 import io.rong.methods.message.system.MsgSystem;
 import io.rong.methods.user.User;
 import io.rong.methods.user.blacklist.Blacklist;
+import io.rong.methods.user.block.Block;
 import io.rong.models.Result;
 import io.rong.models.group.GroupMember;
 import io.rong.models.group.GroupModel;
 import io.rong.models.group.UserGroup;
 import io.rong.models.message.*;
-import io.rong.models.response.BlackListResult;
-import io.rong.models.response.ResponseResult;
-import io.rong.models.response.TokenResult;
-import io.rong.models.response.UserResult;
+import io.rong.models.response.*;
 import io.rong.models.user.UserModel;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -50,6 +48,7 @@ public class DefaultRongCloudClient implements RongCloudClient {
 
     private User User;
     private Blacklist BlackList;
+    private Block Block;
 
     private Private Private;
     private MsgSystem system;
@@ -79,6 +78,7 @@ public class DefaultRongCloudClient implements RongCloudClient {
         rongCloud = RongCloud.getInstance(sealtalkConfig.getRongcloudAppKey(), sealtalkConfig.getRongcloudAppSecret(), mainUrl, backUpUrlList);
         User = rongCloud.user;
         BlackList = rongCloud.user.blackList;
+        Block = rongCloud.user.block;
         Private = rongCloud.message.msgPrivate;
         system = rongCloud.message.system;
     }
@@ -127,6 +127,27 @@ public class DefaultRongCloudClient implements RongCloudClient {
                 return User.get(user);
             }
         });
+    }
+
+    @Override
+    public Result blockUser(String encodeId, Integer minute) throws ServiceException {
+        return RongCloudInvokeTemplate.getData(() -> {
+            UserModel user = new UserModel()
+                    .setId(encodeId)
+                    .setMinute(minute);
+
+            return Block.add(user);
+        });
+    }
+
+    @Override
+    public Result unblockUser(String encodeId) throws ServiceException {
+        return RongCloudInvokeTemplate.getData(() -> Block.remove(encodeId));
+    }
+
+    @Override
+    public BlockUserResult getBlockUserList() throws ServiceException {
+        return RongCloudInvokeTemplate.getData(() -> (BlockUserResult) Block.getList());
     }
 
     @Override
@@ -424,6 +445,10 @@ public class DefaultRongCloudClient implements RongCloudClient {
         });
     }
 
+    @Override
+    public Result sendSystemMessage(SystemMessage message) throws ServiceException {
+        return RongCloudInvokeTemplate.getData((RongCloudCallBack<Result>) () -> rongCloud.message.system.send(message));
+    }
 
     @Override
     public Result joinGroup(String[] memberIds, String groupId, String groupName) throws ServiceException {

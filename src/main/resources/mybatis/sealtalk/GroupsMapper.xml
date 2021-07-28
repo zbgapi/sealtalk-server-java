@@ -23,4 +23,26 @@
     <result column="deletedAt" jdbcType="TIMESTAMP" property="deletedAt" />
     <result column="bulletin" jdbcType="LONGVARCHAR" property="bulletin" />
   </resultMap>
+
+  <select id="selectGroupsForAdmin" resultType="com.rcloud.server.sealtalk.model.dto.GroupAdminDTO">
+    SELECT gm.*,
+    u.phone creatorUid
+
+    FROM groups gm join `users` u
+    on gm.creatorId = u.id
+    where 1=1
+    <if test="name != null and name != ''">
+      and gm.name like concat('%',#{name},'%')
+    </if>
+    <if test="referFlag != null">
+      and gm.referFlag = #{referFlag}
+    </if>
+    <if test="hotFlag != null">
+      and gm.hotFlag = #{hotFlag}
+    </if>
+    <if test="creatorUid != null and creatorUid != ''">
+      and u.phone = #{creatorUid}
+    </if>
+
+  </select>
 </mapper>

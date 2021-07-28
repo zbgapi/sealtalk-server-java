@@ -6,10 +6,8 @@ import com.rcloud.server.sealtalk.rongcloud.message.CustomerGroupApplyMessage;
 import io.rong.models.Result;
 import io.rong.models.message.GroupMessage;
 import io.rong.models.message.PrivateMessage;
-import io.rong.models.response.BlackListResult;
-import io.rong.models.response.ResponseResult;
-import io.rong.models.response.TokenResult;
-import io.rong.models.response.UserResult;
+import io.rong.models.message.SystemMessage;
+import io.rong.models.response.*;
 
 import java.util.List;
 import java.util.Map;
@@ -53,6 +51,33 @@ public interface RongCloudClient {
      * @throws ServiceException
      */
     UserResult getUserInfo(String encodeId) throws ServiceException;
+
+    /**
+     * 封禁用户
+     *
+     * @param encodeId 用户id
+     * @param minute   封禁时间
+     * @return
+     * @throws ServiceException
+     */
+    Result blockUser(String encodeId, Integer minute) throws ServiceException;
+
+    /**
+     * 解封禁用户
+     *
+     * @param encodeId 用户id
+     * @return
+     * @throws ServiceException
+     */
+    Result unblockUser(String encodeId) throws ServiceException;
+
+    /**
+     * 获取封禁用户列表
+     *
+     * @return
+     * @throws ServiceException
+     */
+    BlockUserResult getBlockUserList() throws ServiceException;
 
     /**
      * 用户添加黑名单
@@ -293,4 +318,5 @@ public interface RongCloudClient {
      */
     Result clearHistoryMessage(String conversationType, String fromUserId, String targetId, String msgTimestamp) throws ServiceException;
 
+    Result sendSystemMessage(SystemMessage message) throws ServiceException;
 }

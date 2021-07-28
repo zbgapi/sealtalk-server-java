@@ -1,11 +1,14 @@
 package com.rcloud.server.sealtalk.exchange.domain;
 
 
+import lombok.Data;
+
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.Serializable;
 
+@Data
 @Table(name = "ec_user")
 public class EcUser implements Serializable {
     @Id
@@ -17,37 +20,8 @@ public class EcUser implements Serializable {
     private String loginName;
     @Column(name="head_img")
     private String headImg;
-
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public String getLoginName() {
-        return loginName;
-    }
-
-    public void setLoginName(String loginName) {
-        this.loginName = loginName;
-    }
-
-    public String getHeadImg() {
-        return headImg;
-    }
-
-    public void setHeadImg(String headImg) {
-        this.headImg = headImg;
-    }
+    @Column(name="country_code")
+    private String countryCode;
+    @Column(name="sex")
+    private Integer sex;
 }

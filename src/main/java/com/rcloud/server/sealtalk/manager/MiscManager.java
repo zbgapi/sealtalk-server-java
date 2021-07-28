@@ -14,12 +14,16 @@ import com.rcloud.server.sealtalk.service.FriendshipsService;
 import com.rcloud.server.sealtalk.service.GroupMembersService;
 import com.rcloud.server.sealtalk.service.ScreenStatusesService;
 import com.rcloud.server.sealtalk.service.UsersService;
+import com.rcloud.server.sealtalk.util.MiscUtils;
 import com.rcloud.server.sealtalk.util.N3d;
 import io.rong.messages.TxtMessage;
+import io.rong.models.Result;
 import io.rong.models.message.GroupMessage;
 import io.rong.models.message.PrivateMessage;
+import io.rong.models.message.SystemMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
@@ -221,5 +225,24 @@ public class MiscManager extends BaseManager {
      */
     public void sendScreenCaptureMsg(Integer currentUserId, Integer targetId, Integer conversationType) throws ServiceException {
         sendScreenMsg0(currentUserId, targetId, conversationType, "sendScreenNtf");
+    }
+
+    public void sendSystemMessage(String content, Integer... decodeMemberIds) throws ServiceException {
+        if (decodeMemberIds.length > 100) {
+            throw new ServiceException(ErrorCode.PARAM_ERROR);
+        }
+
+        TxtMessage txtMessage = new TxtMessage(content, "");
+
+        String[] encodeIds = MiscUtils.encodeIds(decodeMemberIds);
+        SystemMessage message = new SystemMessage()
+                .setSenderId("系统消息")
+                .setTargetId(encodeIds)
+                .setObjectName(txtMessage.getType())
+                .setContent(txtMessage);
+        Result result = rongCloudClient.sendSystemMessage(message);
+        if (!Constants.CODE_OK.equals(result.getCode())) {
+            throw new ServiceException(ErrorCode.SERVER_ERROR, "'RongCloud Server API Error Code: " + result.getCode());
+        }
     }
 }

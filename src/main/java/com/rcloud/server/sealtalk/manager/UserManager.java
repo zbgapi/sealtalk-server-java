@@ -1,12 +1,15 @@
 package com.rcloud.server.sealtalk.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.google.common.collect.ImmutableList;
 import com.qiniu.util.Auth;
 import com.rcloud.server.sealtalk.configuration.ProfileConfig;
 import com.rcloud.server.sealtalk.constant.Constants;
 import com.rcloud.server.sealtalk.constant.ErrorCode;
 import com.rcloud.server.sealtalk.constant.SmsServiceType;
+import com.rcloud.server.sealtalk.controller.param.UserListParam;
 import com.rcloud.server.sealtalk.domain.*;
 import com.rcloud.server.sealtalk.exception.ServiceException;
 import com.rcloud.server.sealtalk.exchange.domain.EcUser;
@@ -21,8 +24,10 @@ import com.rcloud.server.sealtalk.spi.verifycode.VerifyCodeAuthentication;
 import com.rcloud.server.sealtalk.spi.verifycode.VerifyCodeAuthenticationFactory;
 import com.rcloud.server.sealtalk.util.*;
 import io.micrometer.core.instrument.util.IOUtils;
+import io.rong.models.BlockUsers;
 import io.rong.models.Result;
 import io.rong.models.response.BlackListResult;
+import io.rong.models.response.BlockUserResult;
 import io.rong.models.response.TokenResult;
 import io.rong.models.user.UserModel;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +47,7 @@ import tk.mybatis.mapper.entity.Example;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Author: xiuwei.nie
@@ -334,6 +340,64 @@ public class UserManager extends BaseManager {
 
     }
 
+    public List<Integer> batchGetOrRegisterUsers(String[] userIds) throws ServiceException {
+        List<EcUser> ecUserList = ecUsersService.getUsers(Arrays.asList(userIds));
+        if (ecUserList.size() != userIds.length) {
+            throw new ServiceException(ErrorCode.USER_ID_INVALID);
+        }
+        Example example = new Example(Users.class);
+        example.createCriteria().andIn("phone", ecUserList.stream().map(EcUser::getUserId).collect(Collectors.toList()));
+        List<Users> usersList = usersService.getByExample(example);
+        Set<String> exists = usersList.stream().map(Users::getPhone).collect(Collectors.toSet());
+        List<EcUser> notRegisterUserList = ecUserList.stream().filter(e -> !exists.contains(e.getUserId())).collect(Collectors.toList());
+
+        List<Users> insertUserList = new ArrayList<>();
+        for (EcUser ecUser : notRegisterUserList) {
+            Users u = new Users();
+            u.setNickname(MiscUtils.toString(ecUser.getNickName(), ecUser.getLoginName()));
+            u.setRegion(MiscUtils.removeRegionPrefix(MiscUtils.toString(ecUser.getCountryCode(), "86")));
+            u.setPhone(ecUser.getUserId());
+            int salt = RandomUtil.randomBetween(1000, 9999);
+            String hashStr = MiscUtils.hash(Users.DEFAULT_PASSWORD, salt);
+            u.setPasswordHash(hashStr);
+            u.setPasswordSalt(String.valueOf(salt));
+            u.setCreatedAt(new Date());
+            u.setUpdatedAt(u.getCreatedAt());
+            u.setPortraitUri(MiscUtils.toString(ecUser.getHeadImg(), sealtalkConfig.getRongcloudDefaultPortraitUrl()));
+            u.setGender(ecUser.getSex() != null && ecUser.getSex() == 0 ? "female" : "male");
+            insertUserList.add(u);
+        }
+
+        List<Integer> ids = usersService.batchInsert(insertUserList);
+        dataVersionsService.batchInsert(ids);
+
+        insertUserList.addAll(usersList);
+        for (Users user : insertUserList) {
+            registerRongCloud(user);
+        }
+        return insertUserList.stream().map(Users::getId).collect(Collectors.toList());
+    }
+
+    private void registerRongCloud(Users u) throws ServiceException {
+        if (StringUtils.isEmpty(u.getRongCloudToken())) {
+            //如果user表中的融云token为空，调用融云sdk 获取token
+            //如果用户头像地址为空，采用默认头像地址
+            String portraitUri = StringUtils.isEmpty(u.getPortraitUri()) ? sealtalkConfig.getRongcloudDefaultPortraitUrl() : u.getPortraitUri();
+            TokenResult tokenResult = rongCloudClient.register(N3d.encode(u.getId()), u.getNickname(), portraitUri);
+            if (!Constants.CODE_OK.equals(tokenResult.getCode())) {
+                throw new ServiceException(ErrorCode.SERVER_ERROR, "'RongCloud Server API Error Code: " + tokenResult.getCode());
+            }
+
+            String token = tokenResult.getToken();
+
+            //获取后根据userId更新表中token
+            Users users = new Users();
+            users.setId(users.getId());
+            users.setRongCloudToken(token);
+            users.setUpdatedAt(new Date());
+            usersService.updateByPrimaryKeySelective(users);
+        }
+    }
 
     /**
      * 用户登录
@@ -360,8 +424,8 @@ public class UserManager extends BaseManager {
             if (ecUser == null) {
                 throw new ServiceException(ErrorCode.USER_NOT_EXIST);
             }
-            String nickname = StringUtils.isEmpty(ecUser.getNickName()) ? ecUser.getLoginName() : ecUser.getNickName();
 
+            String nickname = StringUtils.isEmpty(ecUser.getNickName()) ? ecUser.getLoginName() : ecUser.getNickName();
             u = register0(nickname, ecUser.getHeadImg(), region, phone, salt, hashStr);
         }
 
@@ -403,25 +467,9 @@ public class UserManager extends BaseManager {
             log.error("Error sync user's group list error:" + e.getMessage(), e);
         }
 
-
         String token = u.getRongCloudToken();
         if (StringUtils.isEmpty(token)) {
-            //如果user表中的融云token为空，调用融云sdk 获取token
-            //如果用户头像地址为空，采用默认头像地址
-            String portraitUri = StringUtils.isEmpty(u.getPortraitUri()) ? sealtalkConfig.getRongcloudDefaultPortraitUrl() : u.getPortraitUri();
-            TokenResult tokenResult = rongCloudClient.register(N3d.encode(u.getId()), u.getNickname(), portraitUri);
-            if (!Constants.CODE_OK.equals(tokenResult.getCode())) {
-                throw new ServiceException(ErrorCode.SERVER_ERROR, "'RongCloud Server API Error Code: " + tokenResult.getCode());
-            }
-
-            token = tokenResult.getToken();
-
-            //获取后根据userId更新表中token
-            Users users = new Users();
-            users.setId(u.getId());
-            users.setRongCloudToken(token);
-            users.setUpdatedAt(new Date());
-            usersService.updateByPrimaryKeySelective(users);
+            registerRongCloud(u);
         }
 
         //返回userId、token
@@ -1097,7 +1145,7 @@ public class UserManager extends BaseManager {
 
 
         SyncUserDTO userDTO = new SyncUserDTO();
-        if(users!=null){
+        if (users != null) {
             userDTO.setId(N3d.encode(users.getId()));
             userDTO.setNickname(users.getNickname());
             userDTO.setPortraitUri(users.getPortraitUri());
@@ -1106,17 +1154,17 @@ public class UserManager extends BaseManager {
         syncInfoDTO.setUser(userDTO);
 
         List<SyncBlackListDTO> syncBlackListDTOList = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(blackListsList)){
-            for(BlackLists blackLists:blackListsList){
+        if (!CollectionUtils.isEmpty(blackListsList)) {
+            for (BlackLists blackLists : blackListsList) {
                 SyncBlackListDTO syncBlackListDTO = new SyncBlackListDTO();
                 syncBlackListDTO.setFriendId(N3d.encode(blackLists.getFriendId()));
-                syncBlackListDTO.setStatus(BlackLists.STATUS_VALID.equals(blackLists.getStatus())?true:false);
+                syncBlackListDTO.setStatus(BlackLists.STATUS_VALID.equals(blackLists.getStatus()) ? true : false);
                 syncBlackListDTO.setTimestamp(blackLists.getTimestamp());
 
                 Users u = blackLists.getUsers();
                 SyncUserDTO sUser = new SyncUserDTO();
 
-                if(u!=null){
+                if (u != null) {
                     sUser.setId(N3d.encode(u.getId()));
                     sUser.setNickname(u.getNickname());
                     sUser.setPortraitUri(u.getPortraitUri());
@@ -1131,8 +1179,8 @@ public class UserManager extends BaseManager {
 
 
         List<SyncFriendshipDTO> syncFriendshipDTOList = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(friendshipsList)){
-            for(Friendships friendships:friendshipsList){
+        if (!CollectionUtils.isEmpty(friendshipsList)) {
+            for (Friendships friendships : friendshipsList) {
                 SyncFriendshipDTO syncFriendshipDTO = new SyncFriendshipDTO();
                 syncFriendshipDTO.setFriendId(N3d.encode(friendships.getFriendId()));
                 syncFriendshipDTO.setDisplayName(friendships.getDisplayName());
@@ -1140,7 +1188,7 @@ public class UserManager extends BaseManager {
                 syncFriendshipDTO.setTimestamp(friendships.getTimestamp());
                 Users u = friendships.getUsers();
                 SyncUserDTO syncUserDTO = new SyncUserDTO();
-                if(u!=null){
+                if (u != null) {
                     syncUserDTO.setId(N3d.encode(u.getId()));
                     syncUserDTO.setNickname(u.getNickname());
                     syncUserDTO.setPortraitUri(u.getPortraitUri());
@@ -1154,16 +1202,16 @@ public class UserManager extends BaseManager {
         syncInfoDTO.setFriends(syncFriendshipDTOList);
 
         List<SyncGroupDTO> syncGroupDTOList = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(groupsList)){
-            for(GroupMembers groupMembers:groupsList){
+        if (!CollectionUtils.isEmpty(groupsList)) {
+            for (GroupMembers groupMembers : groupsList) {
                 SyncGroupDTO syncGroupDTO = new SyncGroupDTO();
                 syncGroupDTO.setGroupId(N3d.encode(groupMembers.getGroupId()));
                 syncGroupDTO.setDisplayName(groupMembers.getDisplayName());
-                syncGroupDTO.setIsDeleted(GroupMembers.IS_DELETED_YES.equals(groupMembers.getIsDeleted())?true:false);
+                syncGroupDTO.setIsDeleted(GroupMembers.IS_DELETED_YES.equals(groupMembers.getIsDeleted()) ? true : false);
                 syncGroupDTO.setRole(groupMembers.getRole());
                 Groups g = groupMembers.getGroups();
                 SyncGroupInnerDTO groupInnerDTO = new SyncGroupInnerDTO();
-                if(g!=null){
+                if (g != null) {
                     groupInnerDTO.setId(N3d.encode(g.getId()));
                     groupInnerDTO.setName(g.getName());
                     groupInnerDTO.setPortraitUri(g.getPortraitUri());
@@ -1178,20 +1226,19 @@ public class UserManager extends BaseManager {
         syncInfoDTO.setGroups(syncGroupDTOList);
 
 
-
         List<SyncGroupMemberDTO> syncGroupMemberDTOList = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(groupMembersList)){
-            for(GroupMembers groupMembers:groupMembersList){
+        if (!CollectionUtils.isEmpty(groupMembersList)) {
+            for (GroupMembers groupMembers : groupMembersList) {
                 SyncGroupMemberDTO syncGroupMemberDTO = new SyncGroupMemberDTO();
                 syncGroupMemberDTO.setGroupId(N3d.encode(groupMembers.getGroupId()));
                 syncGroupMemberDTO.setDisplayName(groupMembers.getDisplayName());
-                syncGroupMemberDTO.setIsDeleted(GroupMembers.IS_DELETED_YES.equals(groupMembers.getIsDeleted())?true:false);
+                syncGroupMemberDTO.setIsDeleted(GroupMembers.IS_DELETED_YES.equals(groupMembers.getIsDeleted()) ? true : false);
                 syncGroupMemberDTO.setMemberId(N3d.encode(groupMembers.getMemberId()));
                 syncGroupMemberDTO.setRole(groupMembers.getRole());
                 syncGroupMemberDTO.setTimestamp(groupMembers.getTimestamp());
                 Users u = groupMembers.getUsers();
                 SyncUserDTO su = new SyncUserDTO();
-                if(u!=null){
+                if (u != null) {
                     su.setId(N3d.encode(u.getId()));
                     su.setNickname(u.getNickname());
                     su.setTimestamp(u.getTimestamp());
@@ -1206,6 +1253,73 @@ public class UserManager extends BaseManager {
         syncInfoDTO.setGroup_members(syncGroupMemberDTOList);
         return syncInfoDTO;
 
+    }
+
+    public Page<Users> getUserList(UserListParam param) throws ServiceException {
+        int pageNum = param.getPageNum() == null ? 1 : param.getPageNum();
+        int pageSize = param.getPageSize() == null ? 20 : param.getPageSize();
+        Page<Users> page = PageHelper.startPage(pageNum, pageSize, "id desc");
+        Example example = new Example(Users.class);
+        Example.Criteria criteria = example.createCriteria();
+        if (!StringUtils.isEmpty(param.getId())) {
+            criteria.andEqualTo("id", N3d.decode(param.getId()));
+        }
+        if (!StringUtils.isEmpty(param.getNickname())) {
+            criteria.andLike("nickname", "%" + param.getNickname() + "%");
+        }
+        if (!StringUtils.isEmpty(param.getUserId())) {
+            criteria.andEqualTo("phone", param.getUserId());
+        }
+        if (!StringUtils.isEmpty(param.getStartTime())) {
+            criteria.andGreaterThan("createAt", param.getStartTime());
+        }
+        if (!StringUtils.isEmpty(param.getEndTime())) {
+            criteria.andLessThan("createAt", param.getEndTime());
+        }
+        usersService.getByExample(example);
+        return page;
+    }
+
+    public void setBlock(int id, int status, Integer minute) throws ServiceException {
+        String encodeId = N3d.encode(id);
+        Users users = usersService.getByPrimaryKey(id);
+        if (users == null) {
+            throw new ServiceException(ErrorCode.USER_NOT_EXIST);
+        }
+
+        if (status == 1) {
+            try {
+                Result result = rongCloudClient.blockUser(encodeId, minute);
+                if (!Constants.CODE_OK.equals(result.getCode())) {
+                    log.error("Error: block user failed on IM server, error,code: " + result.getCode());
+                    throw new ServiceException(ErrorCode.SERVER_ERROR);
+                }
+            } catch (Exception e) {
+                log.error("Error: block user failed on IM server, error: " + e.getMessage(), e);
+                throw new ServiceException(ErrorCode.SERVER_ERROR);
+            }
+        } else {
+            try {
+                Result result = rongCloudClient.unblockUser(encodeId);
+                if (!Constants.CODE_OK.equals(result.getCode())) {
+                    log.error("Error: unblock user failed on IM server, error,code: " + result.getCode());
+                    throw new ServiceException(ErrorCode.SERVER_ERROR);
+                }
+            } catch (Exception e) {
+                log.error("Error: unblock user failed on IM server, error: " + e.getMessage(), e);
+                throw new ServiceException(ErrorCode.SERVER_ERROR);
+            }
+        }
+    }
+
+    public List<BlockUsers> getBlockUserList() throws ServiceException {
+        BlockUserResult result = rongCloudClient.getBlockUserList();
+        if (!Constants.CODE_OK.equals(result.getCode())) {
+            log.error("Error: get block user list failed on IM server, error,code: " + result.getCode());
+            throw new ServiceException(ErrorCode.SERVER_ERROR);
+        }
+
+        return result.getUsers();
     }
 }
 

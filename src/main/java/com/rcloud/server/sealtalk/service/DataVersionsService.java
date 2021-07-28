@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.common.Mapper;
 
 import javax.annotation.Resource;
+import javax.xml.crypto.Data;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author: xiuwei.nie
@@ -52,5 +55,26 @@ public class DataVersionsService extends AbstractBaseService<DataVersions, Integ
         dataVersions.setUserId(userId);
         dataVersions.setBlacklistVersion(timestamp);
         this.updateByPrimaryKeySelective(dataVersions);
+    }
+
+    public void batchInsert(List<Integer> ids) {
+        if (ids.isEmpty()) {
+            return;
+        }
+        List<DataVersions> dataVersions = new ArrayList<>();
+        int index = 0;
+        for (Integer id : ids) {
+            DataVersions dv = new DataVersions();
+            dv.setUserId(id);
+
+            dataVersions.add(dv);
+
+            //批量插入DataVersions，每1000条执行一次insert sql
+            index++;
+            if( index % 1000 == 0 || index == ids.size()) {
+                mapper.insertBatch(dataVersions);
+                dataVersions.clear();
+            }
+        }
     }
 }

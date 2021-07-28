@@ -21,6 +21,8 @@ public class Users implements Serializable {
     //加好友需要验证环节
     public static final Integer FRI_VERIFY_NEED = 1;
 
+    // 默认密码
+    public static final String DEFAULT_PASSWORD = "pwd123456";
 
 
 

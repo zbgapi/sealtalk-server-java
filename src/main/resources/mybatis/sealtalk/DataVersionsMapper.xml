@@ -27,6 +27,13 @@
   </update>
 
 
+  <insert id ="insertBatch"  keyProperty="userId" useGeneratedKeys="false" parameterType="java.util.List" >
+    insert ignore into data_versions (userId)
+    values
+    <foreach collection ="dataVersionsList" item="u" index= "index" separator =",">
+      (#{u.userId,jdbcType=VARCHAR})
+    </foreach >
+  </insert >
 
 
 

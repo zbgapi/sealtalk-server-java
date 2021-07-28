@@ -3,6 +3,8 @@ package com.rcloud.server.sealtalk.controller.param;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 /**
  * @Author: Jianlu.Yu
  * @Date: 2020/8/24
@@ -49,5 +51,31 @@ public class GroupParam {
 
     private Integer memberProtection;  //成员保护模式: 0 关闭、1 开启
 
+    private Integer maxMemberCount;
 
+    //  以下是自定义字段
+    /**
+     * 入群持有币种名限制
+     */
+    private String currencyName;
+    /**
+     * 入群持有币种数量
+     */
+    private BigDecimal amount;
+    /**
+     * 入群验证码
+     */
+    private String verificationCode;
+    /**
+     * 关联交易对
+     */
+    private String marketName;
+    /**
+     * 是否推荐群
+     */
+    private Integer referFlag;
+    /**
+     * 是否推荐群
+     */
+    private Integer hotFlag;
 }

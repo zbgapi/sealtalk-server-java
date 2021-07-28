@@ -1,15 +1,19 @@
 package com.rcloud.server.sealtalk.domain;
 
+import lombok.Data;
+
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
+@Data
 @Table(name = "`groups`")
 public class Groups implements Serializable {
-
+    private static final long serialVersionUID = 1L;
     //关闭群组认证状态标示
     public static final Integer CERTI_STATUS_CLOSED = 1;
     //开启群组认证状态标示
@@ -49,7 +53,6 @@ public class Groups implements Serializable {
 
     @Column(name = "creatorId")
     private Integer creatorId;
-
     /**
      * 开启群认证 0-开启 1-关闭
      */
@@ -92,141 +95,36 @@ public class Groups implements Serializable {
     @Column(name = "bulletin")
     private String bulletin;
 
-    private static final long serialVersionUID = 1L;
+    //  以下是自定义字段
+    /**
+     * 入群持有币种名限制
+     */
+    @Column(name = "currencyName")
+    private String currencyName;
+    /**
+     * 入群持有币种数量
+     */
+    @Column(name = "amount")
+    private BigDecimal amount;
+    /**
+     * 入群验证码
+     */
+    @Column(name = "verificationCode")
+    private String verificationCode;
+    /**
+     * 关联交易对
+     */
+    @Column(name = "marketName")
+    private String marketName;
+    /**
+     * 是否推荐群
+     */
+    @Column(name = "referFlag")
+    private Integer referFlag;
+    /**
+     * 是否推荐群
+     */
+    @Column(name = "hotFlag")
+    private Integer hotFlag;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPortraitUri() {
-        return portraitUri;
-    }
-
-    public void setPortraitUri(String portraitUri) {
-        this.portraitUri = portraitUri;
-    }
-
-    public Integer getMemberCount() {
-        return memberCount;
-    }
-
-    public void setMemberCount(Integer memberCount) {
-        this.memberCount = memberCount;
-    }
-
-    public Integer getMaxMemberCount() {
-        return maxMemberCount;
-    }
-
-    public void setMaxMemberCount(Integer maxMemberCount) {
-        this.maxMemberCount = maxMemberCount;
-    }
-
-    public Integer getCreatorId() {
-        return creatorId;
-    }
-
-    public void setCreatorId(Integer creatorId) {
-        this.creatorId = creatorId;
-    }
-
-    public Integer getCertiStatus() {
-        return certiStatus;
-    }
-
-    public void setCertiStatus(Integer certiStatus) {
-        this.certiStatus = certiStatus;
-    }
-
-    public Integer getIsMute() {
-        return isMute;
-    }
-
-    public void setIsMute(Integer isMute) {
-        this.isMute = isMute;
-    }
-
-    public Integer getClearStatus() {
-        return clearStatus;
-    }
-
-    public void setClearStatus(Integer clearStatus) {
-        this.clearStatus = clearStatus;
-    }
-
-    public Long getClearTimeAt() {
-        return clearTimeAt;
-    }
-
-    public void setClearTimeAt(Long clearTimeAt) {
-        this.clearTimeAt = clearTimeAt;
-    }
-
-    public Integer getMemberProtection() {
-        return memberProtection;
-    }
-
-    public void setMemberProtection(Integer memberProtection) {
-        this.memberProtection = memberProtection;
-    }
-
-    public Long getCopiedTime() {
-        return copiedTime;
-    }
-
-    public void setCopiedTime(Long copiedTime) {
-        this.copiedTime = copiedTime;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Date getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(Date deletedAt) {
-        this.deletedAt = deletedAt;
-    }
-
-    public String getBulletin() {
-        return bulletin;
-    }
-
-    public void setBulletin(String bulletin) {
-        this.bulletin = bulletin;
-    }
 }

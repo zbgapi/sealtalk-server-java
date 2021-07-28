@@ -1,10 +1,14 @@
 package com.rcloud.server.sealtalk.manager;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.google.common.collect.ImmutableList;
 import com.rcloud.server.sealtalk.constant.*;
+import com.rcloud.server.sealtalk.controller.param.GroupUpdateParam;
 import com.rcloud.server.sealtalk.domain.*;
 import com.rcloud.server.sealtalk.exception.ServiceException;
 import com.rcloud.server.sealtalk.model.dto.GroupAddStatusDTO;
+import com.rcloud.server.sealtalk.model.dto.GroupAdminDTO;
 import com.rcloud.server.sealtalk.model.dto.UserStatusDTO;
 import com.rcloud.server.sealtalk.rongcloud.RongCloudClient;
 import com.rcloud.server.sealtalk.rongcloud.message.CustomerGroupApplyMessage;
@@ -27,6 +31,7 @@ import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static com.rcloud.server.sealtalk.util.N3d.encode;
@@ -76,6 +81,18 @@ public class GroupManager extends BaseManager {
     private TransactionTemplate transactionTemplate;
 
 
+    public Page<GroupAdminDTO> getGroupList(String groupName, String creatorUid, Integer referFlag, Integer hotFlag, Integer pageNum, Integer pageSize) throws ServiceException {
+
+        Page<GroupAdminDTO> page = PageHelper.startPage(pageNum, pageSize);
+
+        groupsService.selectGroupsForAdmin(groupName, creatorUid, referFlag, hotFlag);
+
+        for (GroupAdminDTO dto : page) {
+            dto.setId(N3d.encode(Long.parseLong(dto.getId())));
+        }
+        return page;
+    }
+
     /**
      * 根据群Id批量获取群列表
      *
@@ -99,7 +116,6 @@ public class GroupManager extends BaseManager {
         return groupsService.getByPrimaryKey(groupId);
     }
 
-
     /**
      * TODO 重点测试
      * 创建群组
@@ -112,6 +128,20 @@ public class GroupManager extends BaseManager {
      * @throws ServiceException
      */
     public GroupAddStatusDTO createGroup(Integer currentUserId, String groupName, Integer[] memberIds, String portraitUri) throws ServiceException {
+        return createGroup(currentUserId, groupName, memberIds, portraitUri, new HashMap<>());
+    }
+    /**
+     * TODO 重点测试
+     * 创建群组
+     *
+     * @param currentUserId 当前用户Id
+     * @param groupName     群组名称
+     * @param memberIds     群成员 Id 列表, 包含 创建者 Id
+     * @param portraitUri   群头像地址
+     * @return GroupAddStatusDTO
+     * @throws ServiceException 创建失败
+     */
+    public GroupAddStatusDTO createGroup(Integer currentUserId, String groupName, Integer[] memberIds, String portraitUri, Map<String, Object> extraMap) throws ServiceException {
 
         long timestamp = System.currentTimeMillis();
 
@@ -134,15 +164,17 @@ public class GroupManager extends BaseManager {
         //未开启加入群验证，允许直接加入群聊的用户
         List<Integer> verifyNoNeedUserList = new ArrayList<>();
 
-        //查询所有成员的用户区分是否开启了入群验证
-        List<Users> usersList = usersService.getUsers(Arrays.asList(joinUserIds));
+        if (joinUserIds.length > 0) {
+            //查询所有成员的用户区分是否开启了入群验证
+            List<Users> usersList = usersService.getUsers(Arrays.asList(joinUserIds));
 
-        if (!CollectionUtils.isEmpty(usersList)) {
-            for (Users users : usersList) {
-                if (Users.GROUP_VERIFY_NEED.equals(users.getGroupVerify())) {
-                    veirfyNeedUserList.add(users.getId());
-                } else {
-                    verifyNoNeedUserList.add(users.getId());
+            if (!CollectionUtils.isEmpty(usersList)) {
+                for (Users users : usersList) {
+                    if (Users.GROUP_VERIFY_NEED.equals(users.getGroupVerify())) {
+                        veirfyNeedUserList.add(users.getId());
+                    } else {
+                        verifyNoNeedUserList.add(users.getId());
+                    }
                 }
             }
         }
@@ -159,6 +191,14 @@ public class GroupManager extends BaseManager {
         groups.setUpdatedAt(groups.getCreatedAt());
         // 创建群时，默认开启群保护
         groups.setMemberProtection(1);
+        // 自定义字段
+        groups.setMaxMemberCount((Integer) extraMap.get("maxMemberCount"));
+        groups.setCurrencyName((String) extraMap.get("currencyName"));
+        groups.setAmount((BigDecimal) extraMap.get("amount"));
+        groups.setVerificationCode((String) extraMap.get("verificationCode"));
+        groups.setMarketName((String) extraMap.get("marketName"));
+        groups.setReferFlag((Integer) extraMap.get("referFlag"));
+        groups.setHotFlag((Integer) extraMap.get("hotFlag"));
         groupsService.saveSelective(groups);
 
         List<Integer> megerUserIdList = new ArrayList<>(verifyNoNeedUserList);
@@ -233,6 +273,62 @@ public class GroupManager extends BaseManager {
         return groupAddStatusDTO;
     }
 
+    public void updateGroup(GroupUpdateParam groupParam) throws ServiceException {
+        Integer groupId = N3d.decode(groupParam.getGroupId());
+
+        long timestamp = System.currentTimeMillis();
+        Groups old = groupsService.getByPrimaryKey(groupId);
+        if (old == null) {
+            throw new ServiceException(ErrorCode.PARAM_ERROR);
+        }
+
+        Groups groups = new Groups();
+        groups.setId(groupId);
+        groups.setName(groupParam.getName());
+        groups.setPortraitUri(groupParam.getPortraitUri());
+        groups.setTimestamp(timestamp);
+        groups.setMaxMemberCount(groupParam.getMaxMemberCount());
+        groups.setCurrencyName(groupParam.getCurrencyName());
+        groups.setAmount(groupParam.getAmount());
+        groups.setVerificationCode(groupParam.getVerificationCode());
+        groups.setMarketName(groupParam.getMarketName());
+        groups.setReferFlag(groupParam.getReferFlag());
+        groups.setHotFlag(groupParam.getHotFlag());
+
+        if (!StringUtils.isEmpty(groupParam.getCreatorUid())) {
+            Users user = usersService.getUser(groupParam.getCreatorUid());
+            if (!user.getId().equals(old.getCreatorId())) {
+                transfer(old.getCreatorId(), old.getId(), user.getId(), N3d.encode(old.getCreatorId()));
+            }
+        }
+
+        int affectedCount = groupsService.updateByPrimaryKeySelective(groups);
+        if (affectedCount == 0) {
+            throw new ServiceException(ErrorCode.GROUP_OR_CREATOR_UNKNOW);
+        }
+
+        //刷新数据版本
+        dataVersionsService.updateGroupVersion(groupId, timestamp);
+        if (!StringUtils.isEmpty(groupParam.getName()) && !groupParam.getName().equals(old.getName())) {
+            try {
+                rename(old.getCreatorId(), groupId, groupParam.getName(), N3d.encode(groupId));
+            } catch (ServiceException e) {
+                log.error("Error: refresh group info failed on IM server, error: " + e.getMessage(), e);
+            }
+        }
+
+        //删除缓存
+        Example example1 = new Example(GroupMembers.class);
+        example1.createCriteria().andEqualTo("groupId", groupId);
+        List<GroupMembers> groupMembersList = groupMembersService.getByExample(example1);
+        if (!CollectionUtils.isEmpty(groupMembersList)) {
+            for (GroupMembers groupMembers : groupMembersList) {
+                CacheUtil.delete(CacheUtil.USER_GROUP_CACHE_PREFIX + groupMembers.getMemberId());
+            }
+        }
+
+        CacheUtil.delete(CacheUtil.GROUP_CACHE_PREFIX + groupId);
+    }
 
     /**
      * 发送群组通知： 操作人固定=》"__system__"
@@ -422,14 +518,14 @@ public class GroupManager extends BaseManager {
             hasManagerRole = false;
         }
 
-        Groups groups = groupsService.getByPrimaryKey(Integer.valueOf(groupId));
+        Groups groups = groupsService.getByPrimaryKey(groupId);
 
         if (groups == null) {
             throw new ServiceException(ErrorCode.EMPTY_GROUPID);
         }
 
         //群组是否开启了入群认证
-        boolean isGroupVerifyOpened = Groups.CERTI_STATUS_OPENED.equals(groups.getCertiStatus()) ? true : false;
+        boolean isGroupVerifyOpened = Groups.CERTI_STATUS_OPENED.equals(groups.getCertiStatus());
 
         //根据memberIds 查询每个成员用户信息是否开启了个人入群认证
         List<Integer> verifyOpendUserIds = new ArrayList<>();
@@ -523,6 +619,11 @@ public class GroupManager extends BaseManager {
 
         if (groups == null) {
             throw new ServiceException(ErrorCode.GROUP_UNKNOWN_ERROR);
+        }
+
+        int memberCount = groups.getMemberCount() + userIds.size();
+        if (memberCount > groups.getMaxMemberCount()) {
+            throw new ServiceException(ErrorCode.INVALID_GROUP_MEMNBER_MAX_COUNT);
         }
 
         transactionTemplate.execute(new TransactionCallback<Boolean>() {
@@ -2403,4 +2504,5 @@ public class GroupManager extends BaseManager {
             }
         }
     }
+
 }

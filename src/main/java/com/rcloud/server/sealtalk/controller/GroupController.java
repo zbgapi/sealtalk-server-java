@@ -329,7 +329,7 @@ public class GroupController extends BaseController {
     @ApiOperation(value = "获取群信息")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public APIResult<?> getGroupInfo(
-            @ApiParam(name = "groupId", value = "群组ID", required = true, type = "String", example = "86")
+            @ApiParam(name = "id", value = "群组ID", required = true, type = "String", example = "86")
             @PathVariable("id") String groupId) throws ServiceException {
         ValidateUtils.notEmpty(groupId);
 
@@ -356,7 +356,7 @@ public class GroupController extends BaseController {
     @ApiOperation(value = "获取群成员列表")
     @RequestMapping(value = "/{id}/members", method = RequestMethod.GET)
     public APIResult<?> getGroupMembers(
-            @ApiParam(name = "groupId", value = "群组ID", required = true, type = "String", example = "86")
+            @ApiParam(name = "id", value = "群组ID", required = true, type = "String", example = "86")
             @PathVariable("id") String groupId) throws ServiceException {
 
         ValidateUtils.notEmpty(groupId);

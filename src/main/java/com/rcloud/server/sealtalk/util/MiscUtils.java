@@ -252,12 +252,12 @@ public class MiscUtils {
         return new String[]{str};
     }
 
-    public static String[] encodeIds(String[] ids) throws ServiceException {
+    public static String[] encodeIds(Integer[] ids) throws ServiceException {
         if(ArrayUtils.isNotEmpty(ids)){
             String[] result = new String[ids.length];
 
             for(int i=0;i<ids.length;i++){
-                result[i] = N3d.encode(Integer.valueOf(ids[i]));
+                result[i] = N3d.encode(ids[i]);
             }
 
             return result;
@@ -303,5 +303,17 @@ public class MiscUtils {
             return v;
         }
         return null;
+    }
+
+    public static String toString(Object obj, String defaultValue) {
+        if (obj == null) {
+            return defaultValue;
+        }
+
+        if (obj instanceof String && StringUtils.isEmpty((String) obj)) {
+            return defaultValue;
+        }
+
+        return obj.toString();
     }
 }
