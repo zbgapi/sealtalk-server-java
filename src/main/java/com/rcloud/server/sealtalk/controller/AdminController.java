@@ -12,7 +12,6 @@ import com.rcloud.server.sealtalk.domain.GroupMembers;
 import com.rcloud.server.sealtalk.domain.Groups;
 import com.rcloud.server.sealtalk.domain.Users;
 import com.rcloud.server.sealtalk.exception.ServiceException;
-import com.rcloud.server.sealtalk.exchange.domain.EcUser;
 import com.rcloud.server.sealtalk.manager.GroupManager;
 import com.rcloud.server.sealtalk.manager.MiscManager;
 import com.rcloud.server.sealtalk.manager.UserManager;
@@ -33,8 +32,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -81,6 +84,8 @@ public class AdminController extends BaseController {
         Page<UserDTO> resultPage = new Page<>(page.getPageNum(), page.getPageSize());
         resultPage.setTotal(page.getTotal());
         if (resultPage.getTotal() > 0) {
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH;mm:ss");
+
             List<BlockUsers> blockUserList = userManager.getBlockUserList();
             Set<String> blockIds = blockUserList.stream().map(BlockUsers::getId).collect(Collectors.toSet());
             for (Users u : page) {
@@ -93,7 +98,7 @@ public class AdminController extends BaseController {
                 userDTO.setPortraitUri(u.getPortraitUri());
                 userDTO.setStAccount(u.getStAccount());
                 userDTO.setBlockStatus(blockIds.contains(userDTO.getId()) ? 1 : 0);
-
+                userDTO.setCreateAt(format.format(u.getCreatedAt()));
                 resultPage.add(userDTO);
             }
         }
@@ -294,7 +299,7 @@ public class AdminController extends BaseController {
 
     @ApiOperation(value = "获取群公告")
     @RequestMapping(value = "/group/get_bulletin", method = RequestMethod.GET)
-    public APIResult<?> getBulletin(
+    public APIResult<GroupBulletinsDTO> getBulletin(
             @ApiParam(name = "groupId", value = "群组ID", required = true, type = "String", example = "86")
             @RequestParam String groupId) throws ServiceException {
 
@@ -319,31 +324,20 @@ public class AdminController extends BaseController {
 
     @ApiOperation(value = "获取群信息")
     @RequestMapping(value = "/group/{id}", method = RequestMethod.GET)
-    public APIResult<?> getGroupInfo(
+    public APIResult<GroupDTO> getGroupInfo(
             @ApiParam(name = "id", value = "群组ID", required = true, type = "String", example = "86")
             @PathVariable("id") String groupId) throws ServiceException {
         ValidateUtils.notEmpty(groupId);
 
         Groups group = groupManager.getGroupInfo(N3d.decode(groupId));
 
-        GroupDTO groupDTO = new GroupDTO();
-        groupDTO.setId(N3d.encode(group.getId()));
-        groupDTO.setName(group.getName());
-        groupDTO.setPortraitUri(group.getPortraitUri());
-        groupDTO.setCreatorId(N3d.encode(group.getCreatorId()));
-        groupDTO.setMemberCount(group.getMemberCount());
-        groupDTO.setMaxMemberCount(group.getMaxMemberCount());
-        groupDTO.setCertiStatus(group.getCertiStatus());
-        groupDTO.setBulletin(group.getBulletin());
-        groupDTO.setIsMute(group.getIsMute());
-        groupDTO.setMemberProtection(group.getMemberProtection());
-        groupDTO.setDeletedAt(group.getDeletedAt());
+        GroupDTO groupDTO = GroupDTO.copyOf(group);
         return APIResultWrap.ok(groupDTO);
     }
 
     @ApiOperation(value = "获取群成员列表")
     @RequestMapping(value = "/group/{id}/members", method = RequestMethod.GET)
-    public APIResult<?> getGroupMembers(
+    public APIResult<List<MemberDTO>> getGroupMembers(
             @ApiParam(name = "id", value = "群组ID", required = true, type = "String", example = "86")
             @PathVariable("id") String groupId) throws ServiceException {
 

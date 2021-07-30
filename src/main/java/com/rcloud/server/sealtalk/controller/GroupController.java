@@ -335,21 +335,8 @@ public class GroupController extends BaseController {
 
         Groups group = groupManager.getGroupInfo(N3d.decode(groupId));
 
-        GroupDTO groupDTO = new GroupDTO();
-        if (groupDTO != null) {
-            groupDTO.setId(N3d.encode(group.getId()));
-            groupDTO.setName(group.getName());
-            groupDTO.setPortraitUri(group.getPortraitUri());
-            groupDTO.setCreatorId(N3d.encode(group.getCreatorId()));
-            groupDTO.setMemberCount(group.getMemberCount());
-            groupDTO.setMaxMemberCount(group.getMaxMemberCount());
-            groupDTO.setCertiStatus(group.getCertiStatus());
-            groupDTO.setBulletin(group.getBulletin());
-            groupDTO.setIsMute(group.getIsMute());
-            groupDTO.setMemberProtection(group.getMemberProtection());
-            groupDTO.setDeletedAt(group.getDeletedAt());
+        GroupDTO groupDTO = GroupDTO.copyOf(group);
 
-        }
         return APIResultWrap.ok(groupDTO);
     }
 
@@ -391,7 +378,6 @@ public class GroupController extends BaseController {
                     userDTO.setGender(u.getGender());
                     userDTO.setPortraitUri(u.getPortraitUri());
                     userDTO.setStAccount(u.getStAccount());
-
                 }
                 memberDTOList.add(memberDTO);
             }

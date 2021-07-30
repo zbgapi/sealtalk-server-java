@@ -39,9 +39,9 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
+        registry.addMapping("/admin/*")
                 .allowedOrigins(sealtalkConfig.getCorsHosts())
-                .allowedMethods("GET,POST,PUT,DELETE,HEAD,OPTIONS")
+                .allowedMethods("*")
                 .allowedHeaders("Content-Type,token")
                 .allowCredentials(true);
 

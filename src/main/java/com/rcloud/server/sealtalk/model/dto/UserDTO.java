@@ -1,7 +1,7 @@
 package com.rcloud.server.sealtalk.model.dto;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.models.auth.In;
 import lombok.Data;
 
 /**
@@ -11,6 +11,7 @@ import lombok.Data;
  * @Copyright (c) 2020, rongcloud.cn All Rights Reserved
  */
 @Data
+@ApiModel("用户信息")
 public class UserDTO {
 
     @ApiModelProperty("用户id")
@@ -29,6 +30,7 @@ public class UserDTO {
     private String stAccount;
     @ApiModelProperty("禁封状态，1：禁封，0：没有封号")
     private Integer blockStatus;
-
+    @ApiModelProperty("创建时间")
+    private String createAt;
 
 }
