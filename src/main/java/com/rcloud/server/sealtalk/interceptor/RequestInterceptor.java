@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -77,8 +78,13 @@ public class RequestInterceptor implements HandlerInterceptor {
     // preHandle：在业务处理器处理请求之前被调用。预处理，可以进行编码、安全控制、权限校验等处理；
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
-        response.setHeader("Access-Control-Allow-Origin",sealtalkConfig.getCorsHosts());
+        String allowOrigin = sealtalkConfig.getCorsHosts();
+        if (!StringUtils.isEmpty(allowOrigin) && !"*".equals(allowOrigin)) {
+            String origin = request.getHeader("Origin");
+            String[] origins = allowOrigin.split(",");
+            allowOrigin = Arrays.stream(origins).filter(e -> e.equals(origin)).findFirst().orElse(origins[0]);
+        }
+        response.setHeader("Access-Control-Allow-Origin", allowOrigin);
         response.setHeader("Access-Control-Allow-Methods","*");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type,x-requested-with,Authorization,token,Accept,Referer,User-Agent");
         response.setHeader("Access-Control-Allow-Credentials", "true");
@@ -95,7 +101,7 @@ public class RequestInterceptor implements HandlerInterceptor {
 //        log.info("preHandle requestUriInfo: ip={}, remoteAddress={},uri={}", requestUriInfo.getIp(), requestUriInfo.getRemoteAddress(), requestUriInfo.getUri());
         serverApiParams.setRequestUriInfo(requestUriInfo);
 
-        if (!excludeUrlSet.contains(uri)) {
+        if (!excludeUrlSet.contains(uri) && !uri.startsWith("/admin")) {
             //不在排除auth认证的url，需要进行身份认证
             Cookie authCookie = getAuthCookie(request);
             if (authCookie == null) {

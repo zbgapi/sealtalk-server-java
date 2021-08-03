@@ -31,19 +31,10 @@ public class WebConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(requestInterceptor)
+                .addPathPatterns("/admin/**")
                 .addPathPatterns("/friendship/**")
                 .addPathPatterns("/user/**")
                 .addPathPatterns("/misc/**")
                 .addPathPatterns("/group/**");
-    }
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/admin/*")
-                .allowedOrigins(sealtalkConfig.getCorsHosts())
-                .allowedMethods("*")
-                .allowedHeaders("Content-Type,token")
-                .allowCredentials(true);
-
     }
 }
