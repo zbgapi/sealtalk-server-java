@@ -71,7 +71,7 @@ public class AdminController extends BaseController {
         Integer[] decodeMemberIds = ids.toArray(new Integer[0]);
 
         miscManager.sendSystemMessage(message, decodeMemberIds);
-        return APIResultWrap.ok("设置/取消封号成功");
+        return APIResultWrap.ok("发送系统消息成功");
     }
 
 
@@ -84,7 +84,7 @@ public class AdminController extends BaseController {
         Page<UserDTO> resultPage = new Page<>(page.getPageNum(), page.getPageSize());
         resultPage.setTotal(page.getTotal());
         if (resultPage.getTotal() > 0) {
-            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH;mm:ss");
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
             List<BlockUsers> blockUserList = userManager.getBlockUserList();
             Set<String> blockIds = blockUserList.stream().map(BlockUsers::getId).collect(Collectors.toSet());
