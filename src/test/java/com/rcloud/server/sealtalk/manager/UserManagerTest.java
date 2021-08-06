@@ -33,6 +33,7 @@ public class UserManagerTest {
     public void getUserList() throws ServiceException {
         UserListParam param = new UserListParam();
         param.setPageSize(1);
+        param.setEndTime("2021-07-01 00:00:00");
         System.out.println(userManager.getUserList(param));
     }
 }

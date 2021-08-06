@@ -1271,10 +1271,10 @@ public class UserManager extends BaseManager {
             criteria.andEqualTo("phone", param.getUserId());
         }
         if (!StringUtils.isEmpty(param.getStartTime())) {
-            criteria.andGreaterThan("createAt", param.getStartTime());
+            criteria.andGreaterThan("createdAt", param.getStartTime());
         }
         if (!StringUtils.isEmpty(param.getEndTime())) {
-            criteria.andLessThan("createAt", param.getEndTime());
+            criteria.andLessThan("createdAt", param.getEndTime());
         }
         usersService.getByExample(example);
         return page;
