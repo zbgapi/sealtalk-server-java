@@ -1,5 +1,8 @@
 package com.rcloud.server.sealtalk.model.dto;
 
+import com.rcloud.server.sealtalk.domain.Users;
+import com.rcloud.server.sealtalk.exception.ServiceException;
+import com.rcloud.server.sealtalk.util.N3d;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -33,4 +36,20 @@ public class UserDTO {
     @ApiModelProperty("创建时间")
     private String createAt;
 
+    public static UserDTO copyOf(Users u) throws ServiceException {
+        UserDTO userDTO = new UserDTO();
+
+        if (u != null) {
+            userDTO.setId(N3d.encode(u.getId()));
+            userDTO.setNickname(u.getNickname());
+            userDTO.setRegion(u.getRegion());
+            userDTO.setPhone(u.getPhone());
+            userDTO.setGender(u.getGender());
+            userDTO.setPortraitUri(u.getPortraitUri());
+            userDTO.setStAccount(u.getStAccount());
+
+        }
+
+        return userDTO;
+    }
 }

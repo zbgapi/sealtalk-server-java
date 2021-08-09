@@ -1,19 +1,15 @@
 package com.rcloud.server.sealtalk.manager;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.rcloud.server.sealtalk.constant.Constants;
 import com.rcloud.server.sealtalk.constant.ConversationType;
 import com.rcloud.server.sealtalk.constant.ErrorCode;
-import com.rcloud.server.sealtalk.domain.Friendships;
-import com.rcloud.server.sealtalk.domain.GroupMembers;
-import com.rcloud.server.sealtalk.domain.ScreenStatuses;
-import com.rcloud.server.sealtalk.domain.Users;
+import com.rcloud.server.sealtalk.domain.*;
 import com.rcloud.server.sealtalk.exception.ServiceException;
 import com.rcloud.server.sealtalk.rongcloud.RongCloudClient;
 import com.rcloud.server.sealtalk.rongcloud.message.CustomerConNtfMessage;
-import com.rcloud.server.sealtalk.service.FriendshipsService;
-import com.rcloud.server.sealtalk.service.GroupMembersService;
-import com.rcloud.server.sealtalk.service.ScreenStatusesService;
-import com.rcloud.server.sealtalk.service.UsersService;
+import com.rcloud.server.sealtalk.service.*;
 import com.rcloud.server.sealtalk.util.MiscUtils;
 import com.rcloud.server.sealtalk.util.N3d;
 import io.rong.messages.TxtMessage;
@@ -24,10 +20,14 @@ import io.rong.models.message.SystemMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Author: Jianlu.Yu
@@ -54,6 +54,8 @@ public class MiscManager extends BaseManager {
     @Resource
     private ScreenStatusesService screenStatusesService;
 
+    @Resource
+    private SystemNotificationService systemNotificationService;
 
     /**
      * 调用Server api发送消息
@@ -217,7 +219,7 @@ public class MiscManager extends BaseManager {
 
 
     /**
-     * 发送截屏消息
+     * 发送系统消息
      *
      * @param currentUserId
      * @param targetId
@@ -236,7 +238,7 @@ public class MiscManager extends BaseManager {
 
         String[] encodeIds = MiscUtils.encodeIds(decodeMemberIds);
         SystemMessage message = new SystemMessage()
-                .setSenderId("系统消息")
+                .setSenderId(Constants.SYSTEM_MESSAGE_FROM_USER_ID)
                 .setTargetId(encodeIds)
                 .setObjectName(txtMessage.getType())
                 .setContent(txtMessage);
@@ -244,5 +246,44 @@ public class MiscManager extends BaseManager {
         if (!Constants.CODE_OK.equals(result.getCode())) {
             throw new ServiceException(ErrorCode.SERVER_ERROR, "'RongCloud Server API Error Code: " + result.getCode());
         }
+
+        saveSystemMessage(content, decodeMemberIds);
+    }
+
+    private void saveSystemMessage(String content, Integer[] memberIds) {
+        long serialNo = System.currentTimeMillis();
+        List<SystemNotification> notificationList = new ArrayList<>(memberIds.length);
+
+        for (Integer memberId : memberIds) {
+            SystemNotification notification = new SystemNotification();
+            notification.setSerialNo(serialNo);
+            notification.setMemberId(memberId);
+            notification.setContent(content);
+            notification.setCreatedAt(new Date());
+            notification.setUpdatedAt(new Date());
+
+            notificationList.add(notification);
+        }
+
+        systemNotificationService.batchInsert(notificationList);
+    }
+
+    public Page<SystemNotification> getSystemMessageList(String userId, String startTime, String endTime, Integer pageNum, Integer pageSize) throws ServiceException {
+
+        Integer memberId = null;
+        if (!StringUtils.isEmpty(userId)) {
+            try {
+                Users user = usersService.getUser(userId);
+                memberId = user.getId();
+            } catch (ServiceException e) {
+                if (e.getErrorCode() == ErrorCode.USER_NOT_EXIST.getErrorCode()) {
+                    return new Page<>(pageNum, pageSize);
+                }
+                throw e;
+            }
+        }
+        Page<SystemNotification> page = PageHelper.startPage(pageNum, pageSize);
+        systemNotificationService.querySystemMessageWithUserIdAndTime(memberId, startTime, endTime);
+        return page;
     }
 }

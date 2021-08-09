@@ -141,6 +141,12 @@ CREATE TABLE `groups`
     `memberProtection` int(10) unsigned    NOT NULL DEFAULT '0',
     `copiedTime`       bigint(20) unsigned NOT NULL DEFAULT '0',
     `timestamp`        bigint(20) unsigned NOT NULL DEFAULT '0',
+    `currencyName`     varchar(32)                  DEFAULT '',
+    `amount`           decimal (32,8)               DEFAULT NULL,
+    `verificationCode` varchar(10)                  DEFAULT NULL,
+    `marketName`       varchar(32)                  DEFAULT NULL,
+    `referFlag`        int(10) unsigned    NOT NULL DEFAULT '0',
+    `hotFlag`          int(10) unsigned    NOT NULL DEFAULT '0',
     `createdAt`        datetime            NOT NULL,
     `updatedAt`        datetime            NOT NULL,
     `deletedAt`        datetime                     DEFAULT NULL,
@@ -277,5 +283,18 @@ CREATE TABLE `verification_violations`
     `time`  datetime    NOT NULL,
     `count` int(10) unsigned DEFAULT NULL,
     PRIMARY KEY (`ip`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;
+
+DROP TABLE IF EXISTS `system_notification`;
+CREATE TABLE `system_notification`
+(
+    `id`               int(10) unsigned    NOT NULL AUTO_INCREMENT,
+    `serialNo`         bigint(32)         NOT NULL,
+    `memberId`         int(10) unsigned    NOT NULL,
+    `content`          text,
+    `createdAt` datetime                                     NOT NULL,
+    `updatedAt` datetime                                     NOT NULL,
+    PRIMARY KEY (`id`),
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;

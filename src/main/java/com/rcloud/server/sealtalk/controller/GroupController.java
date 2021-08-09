@@ -366,19 +366,8 @@ public class GroupController extends BaseController {
                 memberDTO.setUpdatedAt(sdf.format(groupMembers.getUpdatedAt()));
                 memberDTO.setUpdatedTime(groupMembers.getUpdatedAt().getTime());
 
-                UserDTO userDTO = new UserDTO();
-                memberDTO.setUser(userDTO);
+                memberDTO.setUser(UserDTO.copyOf(groupMembers.getUsers()));
 
-                Users u = groupMembers.getUsers();
-                if (u != null) {
-                    userDTO.setId(N3d.encode(u.getId()));
-                    userDTO.setNickname(u.getNickname());
-                    userDTO.setRegion(u.getRegion());
-                    userDTO.setPhone(u.getPhone());
-                    userDTO.setGender(u.getGender());
-                    userDTO.setPortraitUri(u.getPortraitUri());
-                    userDTO.setStAccount(u.getStAccount());
-                }
                 memberDTOList.add(memberDTO);
             }
         }

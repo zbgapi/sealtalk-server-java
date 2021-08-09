@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rcloud.server.sealtalk.dao.SystemNotificationMapper">
+    <resultMap id="BaseResultMap" type="com.rcloud.server.sealtalk.domain.SystemNotification">
+        <!--
+          WARNING - @mbg.generated
+        -->
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="memberId" jdbcType="INTEGER" property="memberId"/>
+        <result column="content" jdbcType="LONGVARCHAR" property="content"/>
+        <result column="serialNo" jdbcType="BIGINT" property="serialNo"/>
+        <result column="createdAt" jdbcType="TIMESTAMP" property="createdAt"/>
+        <result column="updatedAt" jdbcType="TIMESTAMP" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="resultMapWithUsers" type="com.rcloud.server.sealtalk.domain.SystemNotification">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="memberId" jdbcType="INTEGER" property="memberId"/>
+        <result column="content" jdbcType="LONGVARCHAR" property="content"/>
+        <result column="serialNo" jdbcType="BIGINT" property="serialNo"/>
+        <result column="createdAt" jdbcType="TIMESTAMP" property="createdAt"/>
+        <result column="updatedAt" jdbcType="TIMESTAMP" property="updatedAt"/>
+        <association property="users" javaType="com.rcloud.server.sealtalk.domain.Users">
+            <id column="user_id" jdbcType="INTEGER" property="id"/>
+            <result column="user_nickname" jdbcType="VARCHAR" property="nickname"/>
+            <result column="user_portraitUri" jdbcType="VARCHAR" property="portraitUri"/>
+            <result column="user_gender" jdbcType="INTEGER" property="gender"/>
+            <result column="user_stAccount" jdbcType="INTEGER" property="stAccount"/>
+            <result column="user_phone" jdbcType="INTEGER" property="phone"/>
+            <result column="user_region" jdbcType="INTEGER" property="region"/>
+        </association>
+    </resultMap>
+
+    <select id="querySystemMessageWithUserIdAndTime" resultMap="resultMapWithUsers">
+        SELECT gm.*,
+        u.id user_id,
+        u.region user_region,
+        u.nickname user_nickname,
+        u.portraitUri user_portraitUri,
+        u.gender user_gender,
+        u.stAccount user_stAccount,
+        u.phone user_phone
+
+        FROM system_notification gm join `users` u
+        on gm.memberId = u.id
+        <where>
+            <if test=" memberId != null">
+                and gm.memberId = #{memberId}
+            </if>
+            <if test=" startTime != null">
+                and gm.createdAt >= #{startTime}
+            </if>
+            <if test=" endTime != null">
+                and gm.createdAt &lt; #{endTime}
+            </if>
+        </where>
+
+    </select>
+
+    <insert id="insertList" keyProperty="id" useGeneratedKeys="true" parameterType="java.util.List">
+        insert into system_notification
+        (
+        memberId,
+        serialNo,
+        content ,
+        createdAt,
+        updatedAt
+        )
+        values
+        <foreach collection="notificationList" item="gm" index="index" separator=",">
+            (
+            #{gm.memberId,jdbcType=INTEGER},
+            #{gm.serialNo,jdbcType=BIGINT},
+            #{gm.content,jdbcType=LONGVARCHAR},
+            #{gm.createdAt,jdbcType=TIMESTAMP},
+            #{gm.updatedAt,jdbcType=TIMESTAMP}
+            )
+        </foreach>
+    </insert>
+
+
+</mapper>

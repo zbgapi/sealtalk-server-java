@@ -3,14 +3,12 @@ package com.rcloud.server.sealtalk.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
+import com.github.pagehelper.PageInfo;
 import com.google.common.collect.ImmutableList;
 import com.rcloud.server.sealtalk.constant.Constants;
 import com.rcloud.server.sealtalk.constant.ErrorCode;
 import com.rcloud.server.sealtalk.controller.param.*;
-import com.rcloud.server.sealtalk.domain.GroupBulletins;
-import com.rcloud.server.sealtalk.domain.GroupMembers;
-import com.rcloud.server.sealtalk.domain.Groups;
-import com.rcloud.server.sealtalk.domain.Users;
+import com.rcloud.server.sealtalk.domain.*;
 import com.rcloud.server.sealtalk.exception.ServiceException;
 import com.rcloud.server.sealtalk.manager.GroupManager;
 import com.rcloud.server.sealtalk.manager.MiscManager;
@@ -74,10 +72,41 @@ public class AdminController extends BaseController {
         return APIResultWrap.ok("发送系统消息成功");
     }
 
+    @ApiOperation(value = "获取系统消息列表", notes = "只能查到boss后台返送的系统消息")
+    @RequestMapping(value = "/message/list", method = RequestMethod.GET)
+    public APIResult<PageInfo<SystemNotificationDTO>> getSystemMessages(
+            @ApiParam(name = "userId", value = "ZBG用户id", type = "String") @RequestParam(value = "userId", required = false) String userId,
+            @ApiParam(name = "startTime", value = "发送开始时间", type = "String") @RequestParam(value = "startTime", required = false) String startTime,
+            @ApiParam(name = "endTime", value = "发送结束时间", type = "String") @RequestParam(value = "endTime", required = false) String endTime,
+            @ApiParam(name = "pageNum", value = "页码", type = "Integer") @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
+            @ApiParam(name = "pageSize", value = "返回数据数", type = "Integer") @RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize
+    ) throws ServiceException {
+        Page<SystemNotification> page = miscManager.getSystemMessageList(userId, startTime, endTime, pageNum, pageSize);
+        Page<SystemNotificationDTO> resultPage = new Page<>(page.getPageNum(), page.getPageSize());
+        resultPage.setTotal(page.getTotal());
+        if (resultPage.getTotal() > 0) {
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            for (SystemNotification notification : page) {
+                SystemNotificationDTO notificationDTO = new SystemNotificationDTO();
+                notificationDTO.setId(notification.getId());
+                notificationDTO.setMemberId(N3d.encode(notification.getMemberId()));
+                notificationDTO.setSerialNo(notification.getSerialNo());
+                notificationDTO.setContent(notification.getContent());
+                notificationDTO.setCreatedAt(format.format(notification.getCreatedAt()));
+                notificationDTO.setUpdatedAt(format.format(notification.getUpdatedAt()));
+                notificationDTO.setUsers(UserDTO.copyOf(notification.getUsers()));
+
+                resultPage.add(notificationDTO);
+            }
+
+
+        }
+        return APIResultWrap.ok(new PageInfo<>(resultPage));
+    }
 
     @ApiOperation(value = "获取用户列表")
     @RequestMapping(value = "/user/list", method = RequestMethod.GET)
-    public APIResult<Page<UserDTO>> getUsers(UserListParam param) throws ServiceException {
+    public APIResult<PageInfo<UserDTO>> getUsers(UserListParam param) throws ServiceException {
 
         Page<Users> page = userManager.getUserList(param);
 
@@ -102,7 +131,7 @@ public class AdminController extends BaseController {
                 resultPage.add(userDTO);
             }
         }
-        return APIResultWrap.ok(resultPage);
+        return APIResultWrap.ok(new PageInfo<>(resultPage));
     }
 
     @ApiOperation(value = "设置用户禁封状态")
@@ -125,7 +154,7 @@ public class AdminController extends BaseController {
 
     @ApiOperation(value = "获取群列表")
     @RequestMapping(value = "/group/list", method = RequestMethod.GET)
-    public APIResult<Page<GroupAdminDTO>> getGroups(
+    public APIResult<PageInfo<GroupAdminDTO>> getGroups(
             @ApiParam(name = "groupName", value = "群组名称", type = "String") @RequestParam(value = "groupName", required = false) String groupName,
             @ApiParam(name = "creatorUid", value = "群主ZBG用户id", type = "String") @RequestParam(value = "creatorUid", required = false) String creatorUid,
             @ApiParam(name = "referFlag", value = "是否推荐群0/1，不传查全部", type = "Integer") @RequestParam(value = "referFlag", required = false) Integer referFlag,
@@ -136,7 +165,7 @@ public class AdminController extends BaseController {
 
         Page<GroupAdminDTO> groupList = groupManager.getGroupList(groupName, creatorUid, referFlag, hotFlag, pageNum, pageSize);
 
-        return APIResultWrap.ok(groupList);
+        return APIResultWrap.ok(new PageInfo<>(groupList));
     }
 
     @ApiOperation(value = "创建群组")
@@ -362,20 +391,8 @@ public class AdminController extends BaseController {
                 memberDTO.setUpdatedAt(sdf.format(groupMembers.getUpdatedAt()));
                 memberDTO.setUpdatedTime(groupMembers.getUpdatedAt().getTime());
 
-                UserDTO userDTO = new UserDTO();
-                memberDTO.setUser(userDTO);
+                memberDTO.setUser(UserDTO.copyOf(groupMembers.getUsers()));
 
-                Users u = groupMembers.getUsers();
-                if (u != null) {
-                    userDTO.setId(N3d.encode(u.getId()));
-                    userDTO.setNickname(u.getNickname());
-                    userDTO.setRegion(u.getRegion());
-                    userDTO.setPhone(u.getPhone());
-                    userDTO.setGender(u.getGender());
-                    userDTO.setPortraitUri(u.getPortraitUri());
-                    userDTO.setStAccount(u.getStAccount());
-
-                }
                 memberDTOList.add(memberDTO);
             }
         }
