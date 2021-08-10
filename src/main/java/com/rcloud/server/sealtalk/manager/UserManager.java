@@ -355,7 +355,7 @@ public class UserManager extends BaseManager {
         for (EcUser ecUser : notRegisterUserList) {
             Users u = new Users();
             u.setNickname(MiscUtils.toString(ecUser.getNickName(), ecUser.getLoginName()));
-            u.setRegion(MiscUtils.removeRegionPrefix(MiscUtils.toString(ecUser.getCountryCode(), "86")));
+            u.setRegion("86");
             u.setPhone(ecUser.getUserId());
             int salt = RandomUtil.randomBetween(1000, 9999);
             String hashStr = MiscUtils.hash(Users.DEFAULT_PASSWORD, salt);

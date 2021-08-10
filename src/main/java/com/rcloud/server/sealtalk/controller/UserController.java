@@ -228,15 +228,15 @@ public class UserController extends BaseController {
     @ApiOperation(value = "用户登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public APIResult<Object> login(@RequestBody UserParam userParam, HttpServletResponse response) throws ServiceException {
-        String region = userParam.getRegion();
+//        String region = userParam.getRegion();
         String phone = userParam.getPhone();
 //        String password = userParam.getPassword();
 
-        ValidateUtils.notEmpty(region);
+//        ValidateUtils.notEmpty(region);
         ValidateUtils.notEmpty(phone);
 //        ValidateUtils.notEmpty(password);
 
-        region = MiscUtils.removeRegionPrefix(region);
+//        region = MiscUtils.removeRegionPrefix(region);
 //        ValidateUtils.checkRegionName(MiscUtils.getRegionName(region));
 //        ValidateUtils.checkCompletePhone(phone);
 
