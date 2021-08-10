@@ -128,7 +128,7 @@ public class AdminController extends BaseController {
     }
 
     @ApiOperation(value = "获取用户信息")
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)
     public APIResult<Object> getUserInfo(@ApiParam(name = "id", value = "用户ID", required = true, type = "Integer", example = "xxx")
                                          @PathVariable("id") String id) throws ServiceException {
 
@@ -142,7 +142,7 @@ public class AdminController extends BaseController {
     }
 
     @ApiOperation(value = "更新用户昵称或头像")
-    @RequestMapping(value = "/update", method = RequestMethod.GET)
+    @RequestMapping(value = "/user/update", method = RequestMethod.GET)
     public APIResult<Object> updateUser(@RequestBody UserAdminParam userParam) throws ServiceException {
 
         Users users = userManager.getUser("86", userParam.getUserId());
