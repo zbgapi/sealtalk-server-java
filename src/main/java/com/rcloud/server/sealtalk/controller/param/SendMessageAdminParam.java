@@ -9,4 +9,6 @@ public class SendMessageAdminParam {
     private String[] userId;
     @ApiModelProperty(value = "消息内容", required = true)
     private String message;
+    @ApiModelProperty(value = "发送者ID")
+    private String senderId;
 }

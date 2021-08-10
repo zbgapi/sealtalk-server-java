@@ -47,7 +47,6 @@ public class UserDTO {
             userDTO.setGender(u.getGender());
             userDTO.setPortraitUri(u.getPortraitUri());
             userDTO.setStAccount(u.getStAccount());
-
         }
 
         return userDTO;

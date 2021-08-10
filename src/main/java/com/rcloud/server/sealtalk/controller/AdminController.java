@@ -68,7 +68,7 @@ public class AdminController extends BaseController {
         }
         Integer[] decodeMemberIds = ids.toArray(new Integer[0]);
 
-        miscManager.sendSystemMessage(message, decodeMemberIds);
+        miscManager.sendSystemMessage(param.getSenderId(), message, decodeMemberIds);
         return APIResultWrap.ok("发送系统消息成功");
     }
 
@@ -118,20 +118,45 @@ public class AdminController extends BaseController {
             List<BlockUsers> blockUserList = userManager.getBlockUserList();
             Set<String> blockIds = blockUserList.stream().map(BlockUsers::getId).collect(Collectors.toSet());
             for (Users u : page) {
-                UserDTO userDTO = new UserDTO();
-                userDTO.setId(N3d.encode(u.getId()));
-                userDTO.setNickname(u.getNickname());
-                userDTO.setRegion(u.getRegion());
-                userDTO.setPhone(u.getPhone());
-                userDTO.setGender(u.getGender());
-                userDTO.setPortraitUri(u.getPortraitUri());
-                userDTO.setStAccount(u.getStAccount());
+                UserDTO userDTO = UserDTO.copyOf(u);
                 userDTO.setBlockStatus(blockIds.contains(userDTO.getId()) ? 1 : 0);
                 userDTO.setCreateAt(format.format(u.getCreatedAt()));
                 resultPage.add(userDTO);
             }
         }
         return APIResultWrap.ok(new PageInfo<>(resultPage));
+    }
+
+    @ApiOperation(value = "获取用户信息")
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public APIResult<Object> getUserInfo(@ApiParam(name = "id", value = "用户ID", required = true, type = "Integer", example = "xxx")
+                                         @PathVariable("id") String id) throws ServiceException {
+
+        Integer userId = N3d.decode(id);
+        Users users = userManager.getUser(userId);
+        if (users != null) {
+            return APIResultWrap.ok(UserDTO.copyOf(users));
+        } else {
+            throw new ServiceException(ErrorCode.UNKNOW_USER);
+        }
+    }
+
+    @ApiOperation(value = "更新用户昵称或头像")
+    @RequestMapping(value = "/update", method = RequestMethod.GET)
+    public APIResult<Object> updateUser(@RequestBody UserAdminParam userParam) throws ServiceException {
+
+        Users users = userManager.getUser("86", userParam.getUserId());
+        if (users != null) {
+            if (!StringUtils.isEmpty(userParam.getNickname())) {
+                userManager.setNickName(userParam.getNickname(), users.getId());
+            }
+            if (!StringUtils.isEmpty(userParam.getPortraitUri())) {
+                userManager.setNickName(userParam.getPortraitUri(), users.getId());
+            }
+            return APIResultWrap.ok();
+        } else {
+            throw new ServiceException(ErrorCode.UNKNOW_USER);
+        }
     }
 
     @ApiOperation(value = "设置用户禁封状态")
