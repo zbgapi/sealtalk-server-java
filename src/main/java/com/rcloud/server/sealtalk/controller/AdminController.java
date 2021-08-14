@@ -208,6 +208,9 @@ public class AdminController extends BaseController {
         ValidateUtils.checkGroupName(name);
         if (portraitUri == null) {
             portraitUri = "";
+        } else if (!portraitUri.startsWith("http")) {
+            boolean  isProd = "prod".equalsIgnoreCase(sealtalkConfig.getConfigEnv());
+            portraitUri = "https://zbg-admin" + (isProd ? "" : "-test") + ".oss-cn-beijing.aliyuncs.com/" + portraitUri;
         }
 
         if (maxMemberCount != null && maxMemberCount > ValidateUtils.DEFAULT_MAX_GROUP_MEMBER_COUNT) {
@@ -232,12 +235,19 @@ public class AdminController extends BaseController {
     @RequestMapping(value = "/group/update", method = RequestMethod.POST)
     public APIResult<Object> update(@RequestBody GroupUpdateParam groupParam) throws ServiceException {
         String name = groupParam.getName();
+        String portraitUri = groupParam.getPortraitUri();
 
         ValidateUtils.notNull(groupParam.getGroupId());
         ValidateUtils.checkGroupName(name);
 
         name = MiscUtils.xss(name, ValidateUtils.GROUP_NAME_MAX_LENGTH);
         ValidateUtils.checkGroupName(name);
+
+        if (!StringUtils.isEmpty(portraitUri) && !portraitUri.startsWith("http")) {
+            boolean  isProd = "prod".equalsIgnoreCase(sealtalkConfig.getConfigEnv());
+            portraitUri = "https://zbg-admin" + (isProd ? "" : "-test") + ".oss-cn-beijing.aliyuncs.com/" + portraitUri;
+            groupParam.setPortraitUri(portraitUri);
+        }
 
         groupManager.updateGroup(groupParam);
 
