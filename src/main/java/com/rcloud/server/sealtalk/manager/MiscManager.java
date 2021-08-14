@@ -229,12 +229,12 @@ public class MiscManager extends BaseManager {
         sendScreenMsg0(currentUserId, targetId, conversationType, "sendScreenNtf");
     }
 
-    public void sendSystemMessage(String senderId, String content, Integer... decodeMemberIds) throws ServiceException {
+    public void sendSystemMessage(String senderId, String content, String extra, Integer... decodeMemberIds) throws ServiceException {
         if (decodeMemberIds.length > 100) {
             throw new ServiceException(ErrorCode.PARAM_ERROR);
         }
 
-        TxtMessage txtMessage = new TxtMessage(content, "");
+        TxtMessage txtMessage = new TxtMessage(content, extra);
 
         String[] encodeIds = MiscUtils.encodeIds(decodeMemberIds);
         SystemMessage message = new SystemMessage()

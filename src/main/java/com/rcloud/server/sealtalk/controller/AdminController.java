@@ -57,6 +57,7 @@ public class AdminController extends BaseController {
     public APIResult<Object> sendMessage(@RequestBody SendMessageAdminParam param) throws ServiceException {
         String[] userIds = param.getUserId();
         String message = param.getMessage();
+        String extra = param.getExtra();
 
         ValidateUtils.notEmpty(message);
         ValidateUtils.notEmpty(userIds);
@@ -68,7 +69,7 @@ public class AdminController extends BaseController {
         }
         Integer[] decodeMemberIds = ids.toArray(new Integer[0]);
 
-        miscManager.sendSystemMessage(param.getSenderId(), message, decodeMemberIds);
+        miscManager.sendSystemMessage(param.getSenderId(), message, extra, decodeMemberIds);
         return APIResultWrap.ok("发送系统消息成功");
     }
 

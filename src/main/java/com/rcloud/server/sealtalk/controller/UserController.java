@@ -216,6 +216,20 @@ public class UserController extends BaseController {
         ValidateUtils.checkUUID(verificationToken);
     }
 
+    @ApiOperation(value = "获取用户Id")
+    @RequestMapping(value = "/get_id", method = RequestMethod.GET)
+    public APIResult<Object> getId(@ApiParam(name = "userId", value = "userId", type = "String")
+                                       @RequestParam(value = "userId") String userId) throws ServiceException {
+        ValidateUtils.notEmpty(userId);
+        Pair<Integer, String> pairResult = userManager.login("86", userId, "pwd123456");
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("id", pairResult.getLeft());
+
+        //对result编码
+        return APIResultWrap.ok(MiscUtils.encodeResults(resultMap));
+    }
+
     /**
      * 1、 判断phone、regionName合法性，不合法返回400
      * 2、 根据phone、region查询用户，查询不到返回1000，提示phone不存在

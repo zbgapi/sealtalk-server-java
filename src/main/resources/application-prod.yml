@@ -22,7 +22,7 @@ spring:
     baseline-version: 2
 
   swagger2:
-    enabled: true
+    enabled: false
 mybatis:
   mapper-locations: classpath:mybatis/*.xml
 
