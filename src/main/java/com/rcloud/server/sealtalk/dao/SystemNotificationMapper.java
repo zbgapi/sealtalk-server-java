@@ -10,5 +10,5 @@ public interface SystemNotificationMapper extends Mapper<SystemNotification> {
 
     int insertList(@Param("notificationList") List<SystemNotification> notificationList);
 
-    List<SystemNotification> querySystemMessageWithUserIdAndTime(Integer memberId, String startTime, String endTime);
+    List<SystemNotification> querySystemMessageWithUserIdAndTime(@Param("memberId") Integer memberId, @Param("startTime")String startTime, @Param("endTime")String endTime);
 }

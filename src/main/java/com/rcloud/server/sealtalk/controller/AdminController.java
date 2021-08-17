@@ -320,7 +320,7 @@ public class AdminController extends BaseController {
             throw new ServiceException(ErrorCode.EMPTY_PARAMETER);
         }
         Groups groupInfo = groupManager.getGroupInfo(N3d.decode(groupId));
-        if (decodeIds.length == 1 && groupInfo.getId().intValue() == decodeIds[0]) {
+        if (decodeIds.length == 1 && groupInfo.getCreatorId().intValue() == decodeIds[0]) {
             throw new ServiceException(ErrorCode.PARAM_ERROR, "Creator can not set manager");
         }
         groupManager.batchSetManager(groupInfo.getCreatorId(), N3d.decode(groupId), decodeIds, memberIds);
