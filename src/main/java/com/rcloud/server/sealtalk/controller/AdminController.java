@@ -315,10 +315,15 @@ public class AdminController extends BaseController {
         String[] memberIds = groupParam.getMemberIds();
         ValidateUtils.notEmpty(groupId);
         ValidateUtils.notEmpty(memberIds);
-
+        Integer[] decodeIds = MiscUtils.decodeIds(memberIds);
+        if (decodeIds == null) {
+            throw new ServiceException(ErrorCode.EMPTY_PARAMETER);
+        }
         Groups groupInfo = groupManager.getGroupInfo(N3d.decode(groupId));
-
-        groupManager.batchSetManager(groupInfo.getCreatorId(), N3d.decode(groupId), MiscUtils.decodeIds(memberIds), memberIds);
+        if (decodeIds.length == 1 && groupInfo.getId().intValue() == decodeIds[0]) {
+            throw new ServiceException(ErrorCode.PARAM_ERROR, "Creator can not set manager");
+        }
+        groupManager.batchSetManager(groupInfo.getCreatorId(), N3d.decode(groupId), decodeIds, memberIds);
         return APIResultWrap.ok();
     }
 

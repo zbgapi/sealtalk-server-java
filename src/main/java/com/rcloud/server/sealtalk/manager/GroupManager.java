@@ -298,7 +298,7 @@ public class GroupManager extends BaseManager {
         if (!StringUtils.isEmpty(groupParam.getCreatorUid())) {
             Users user = usersService.getUser(groupParam.getCreatorUid());
             if (!user.getId().equals(old.getCreatorId())) {
-                transfer(old.getCreatorId(), old.getId(), user.getId(), N3d.encode(old.getCreatorId()));
+                transfer(old.getCreatorId(), old.getId(), user.getId(), N3d.encode(user.getId()));
             }
         }
 
