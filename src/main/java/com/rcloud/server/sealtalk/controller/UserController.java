@@ -16,6 +16,7 @@ import com.rcloud.server.sealtalk.model.dto.sync.SyncInfoDTO;
 import com.rcloud.server.sealtalk.model.response.APIResult;
 import com.rcloud.server.sealtalk.model.response.APIResultWrap;
 import com.rcloud.server.sealtalk.util.*;
+import io.rong.models.BlockUsers;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -167,7 +168,7 @@ public class UserController extends BaseController {
         String phone = userParam.getPhone();
 
         region = MiscUtils.removeRegionPrefix(region);
-        if(Constants.REGION_NUM.equals(region)){
+        if (Constants.REGION_NUM.equals(region)) {
             ValidateUtils.checkCompletePhone(phone);
         }
         if (userManager.isExistUser(region, phone)) {
@@ -219,7 +220,7 @@ public class UserController extends BaseController {
     @ApiOperation(value = "获取用户Id")
     @RequestMapping(value = "/get_id", method = RequestMethod.GET)
     public APIResult<Object> getId(@ApiParam(name = "userId", value = "userId", type = "String")
-                                       @RequestParam(value = "userId") String userId) throws ServiceException {
+                                   @RequestParam(value = "userId") String userId) throws ServiceException {
         ValidateUtils.notEmpty(userId);
         Pair<Integer, String> pairResult = userManager.login("86", userId, "pwd123456");
 
@@ -379,11 +380,11 @@ public class UserController extends BaseController {
 
         List<BlackLists> resultList = userManager.getBlackList(currentUserId);
 
-        List<BlackListDTO>  BlackListDTOList = new ArrayList<>();
+        List<BlackListDTO> BlackListDTOList = new ArrayList<>();
 
         SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMATR_PATTERN);
 
-        if(!CollectionUtils.isEmpty(resultList)) {
+        if (!CollectionUtils.isEmpty(resultList)) {
 
             for (BlackLists blackLists : resultList) {
                 BlackListDTO blackListDTO = new BlackListDTO();
@@ -754,5 +755,17 @@ public class UserController extends BaseController {
             }
         }
         return APIResultWrap.ok(resultMap);
+    }
+
+    /**
+     * 查询封禁用户
+     */
+    @ApiOperation(value = "batch")
+    @RequestMapping(value = "/block/query", method = RequestMethod.GET)
+    public APIResult<Object> queryBlock() throws ServiceException {
+
+        List<BlockUsers> userList = userManager.getBlockUserList();
+
+        return APIResultWrap.ok(userList);
     }
 }

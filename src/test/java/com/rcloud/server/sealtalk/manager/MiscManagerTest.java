@@ -31,4 +31,15 @@ public class MiscManagerTest {
         extra.put("amount", "1000");
         miscManager.sendSystemMessage("系统消息", "你的OTC订单已经完成", extra.toJSONString(), 2);
     }
+
+    @Test
+    public void getSystemMessageList() throws ServiceException {
+        JSONObject extra = new JSONObject();
+        extra.put("userId", "7laqlo4F8N6");
+        extra.put("orderId", "1111");
+        extra.put("actionType", 1);
+        extra.put("currencyName", "usdt");
+        extra.put("amount", "1000");
+        miscManager.getSystemMessageList("7laqlo4F8N6", null, null, 1, 2);
+    }
 }
