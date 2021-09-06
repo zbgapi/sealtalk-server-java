@@ -1213,6 +1213,11 @@ public class GroupManager extends BaseManager {
             throw new ServiceException(ErrorCode.GROUP_OR_CREATOR_UNKNOW);
         }
 
+        //发送群组重命名通知
+        Map<String, Object> messageData = new HashMap<>();
+        messageData.put("portraitUri", portraitUri);
+        messageData.put("timestamp", timestamp);
+        sendGroupNotificationMessageBySystem(groupId, messageData, currentUserId, GroupOperationType.SET_PORTRAIT);
         //刷新数据版本
         dataVersionsService.updateGroupVersion(groupId, timestamp);
 

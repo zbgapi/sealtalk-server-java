@@ -143,7 +143,7 @@ public class AdminController extends BaseController {
     }
 
     @ApiOperation(value = "更新用户昵称或头像")
-    @RequestMapping(value = "/user/update", method = RequestMethod.GET)
+    @RequestMapping(value = "/user/update", method = RequestMethod.POST)
     public APIResult<Object> updateUser(@RequestBody UserAdminParam userParam) throws ServiceException {
 
         Users users = userManager.getUser("86", userParam.getUserId());
@@ -152,7 +152,7 @@ public class AdminController extends BaseController {
                 userManager.setNickName(userParam.getNickname(), users.getId());
             }
             if (!StringUtils.isEmpty(userParam.getPortraitUri())) {
-                userManager.setNickName(userParam.getPortraitUri(), users.getId());
+                userManager.setPortraitUri(userParam.getPortraitUri(), users.getId());
             }
             return APIResultWrap.ok();
         } else {

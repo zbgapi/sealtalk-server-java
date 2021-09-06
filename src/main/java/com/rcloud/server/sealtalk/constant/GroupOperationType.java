@@ -13,6 +13,7 @@ public enum GroupOperationType {
     DISMISS("Dismiss"), //解散群组
     KICKED("Kicked"),   //踢人
     RENAME("Rename"),   //重命名群组
+    SET_PORTRAIT("SetPortrait"),   //设置群头像
     BULLETIN("Bulletin"),   //群公共
     TRANSFER("Transfer"),   //转让群主
     SET_MANAGER("SetManager"),  //设置管理员
