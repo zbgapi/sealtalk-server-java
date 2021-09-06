@@ -145,7 +145,7 @@ public class AdminController extends BaseController {
     @ApiOperation(value = "更新用户昵称或头像")
     @RequestMapping(value = "/user/update", method = RequestMethod.POST)
     public APIResult<Object> updateUser(@RequestBody UserAdminParam userParam) throws ServiceException {
-
+        ValidateUtils.notEmpty(userParam.getUserId());
         Users users = userManager.getUser("86", userParam.getUserId());
         if (users != null) {
             if (!StringUtils.isEmpty(userParam.getNickname())) {
