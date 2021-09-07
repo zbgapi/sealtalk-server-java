@@ -59,7 +59,7 @@ public class Constants {
      * /group/set_manager
      */
     public static final String GroupNotificationMessage_fromUserId = "__system__";
-    public static final String SYSTEM_MESSAGE_FROM_USER_ID = "__system__";
+    public static final String SYSTEM_MESSAGE_FROM_USER_ID = "系统通知";
 
 
     public static final Integer CODE_OK = 200;

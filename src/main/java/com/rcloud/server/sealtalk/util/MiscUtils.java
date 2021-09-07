@@ -195,50 +195,7 @@ public class MiscUtils {
 
     public static void main(String[] args) throws Exception {
 
-        List<Users> usersList = new ArrayList<>(3);
-        for (int i = 0; i < 3; i++) {
-            Users users = new Users();
-            users.setId(12 + i);
-            users.setNickname("test22" + i);
-            users.setPhone("18810183283");
-            users.setDeletedAt(new Date());
-            Groups groups = new Groups();
-            groups.setId(null);
-            groups.setCreatorId(33 + i);
-            groups.setCreatedAt(new Date());
-            groups.setName("gnameTest");
-            users.setGroups(groups);
-            usersList.add(users);
-        }
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        Object object = MiscUtils.encodeResults(usersList);
-        System.out.println(objectMapper.writeValueAsString(APIResultWrap.ok(object)));
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", 12);
-        map.put("name", "test");
-
-        List<Object> list = new ArrayList<>();
-
-        Map<String, Object> map2 = new HashMap<>();
-        map2.put("userId", 33);
-        map2.put("name", "testname");
-        list.add(map2);
-        Map<String, Object> map3 = new HashMap<>();
-        map3.put("userId", 33);
-        map3.put("name", "testname");
-        map3.put("users", usersList);
-        list.add(map3);
-        map.put("list", list);
-        map.put("users", usersList);
-        System.out.println(MiscUtils.encodeResults(map, "list.users.groups.creatorId", "id", "mapGroup.userId", "list.userId", "users.id", "users.groups.id", "users.groups.creatorId"));
-
-        String text = "abcd123";
-        int salt = 9988;
-
-        //a2d46a186480138852a18cb1c8b2af530f3e5166
-        System.out.println(hash(text, salt));
+        System.out.println(">>>"+shortUuid());
     }
 
 
@@ -315,5 +272,31 @@ public class MiscUtils {
         }
 
         return obj.toString();
+    }
+
+    /**
+     * 短8位随机字符串
+     *
+     * @return 随机字符串
+     */
+    public static String shortUuid() {
+        /*
+         利用62个可打印字符，通过随机生成32位UUID，由于UUID都为十六进制，所以将UUID分成8组，每4个为一组，然后通过模62操作，结果作为索引取出字符
+         */
+        StringBuilder builder = new StringBuilder();
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        for (int i = 0; i < 8; i++) {
+            String str = uuid.substring(i * 4, i * 4 + 4);
+            int x = Integer.parseInt(str, 16);
+            x = x % 0x3E + 48;
+            if (x > 57) {
+                x += 7;
+            }
+            if (x > 90) {
+                x += 6;
+            }
+            builder.append((char) x);
+        }
+        return builder.toString();
     }
 }

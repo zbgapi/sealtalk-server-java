@@ -1,7 +1,5 @@
 package com.rcloud.server.sealtalk.dao;
 
-import com.rcloud.server.sealtalk.constant.GroupRole;
-import com.rcloud.server.sealtalk.domain.GroupMembers;
 import com.rcloud.server.sealtalk.domain.Users;
 import com.rcloud.server.sealtalk.exception.ServiceException;
 import org.junit.Test;
@@ -11,10 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @Author: Jianlu.Yu
