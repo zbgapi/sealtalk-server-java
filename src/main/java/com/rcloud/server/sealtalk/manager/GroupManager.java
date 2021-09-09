@@ -147,7 +147,7 @@ public class GroupManager extends BaseManager {
      * @throws ServiceException 创建失败
      */
     public GroupAddStatusDTO createGroup(Integer currentUserId, String groupName, Integer[] memberIds, String portraitUri, Map<String, Object> extraMap) throws ServiceException {
-
+        checkMarketNameExist(null, (String) extraMap.get("marketName"));
         long timestamp = System.currentTimeMillis();
 
         List<UserStatusDTO> userStatusDTOList = new ArrayList<>();
@@ -282,6 +282,7 @@ public class GroupManager extends BaseManager {
 
     public void updateGroup(GroupUpdateParam groupParam) throws ServiceException {
         Integer groupId = N3d.decode(groupParam.getGroupId());
+        checkMarketNameExist(groupId, groupParam.getMarketName());
 
         long timestamp = System.currentTimeMillis();
         Groups old = groupsService.getByPrimaryKey(groupId);
@@ -340,6 +341,21 @@ public class GroupManager extends BaseManager {
         this.eConfigService.configTalkMarket(g.getMarketName(), g.getId(), g.getCreatorId(), old.getMarketName());
     }
 
+    private void checkMarketNameExist(Integer groupId, String marketName) throws ServiceException {
+        if (StringUtils.isEmpty(marketName)) {
+            return;
+        }
+
+        Example example = new Example(Groups.class);
+        Example.Criteria criteria = example.createCriteria().andEqualTo("marketName", marketName);
+        if (groupId != null) {
+            criteria.andNotEqualTo("id", groupId);
+        }
+        List<Groups> groupsList = this.groupsService.getByExample(example);
+        if (groupsList != null && groupsList.size() > 0) {
+            throw new ServiceException(ErrorCode.MARKET_EXIST);
+        }
+    }
     /**
      * 发送群组通知： 操作人固定=》"__system__"
      *

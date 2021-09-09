@@ -71,8 +71,8 @@ public enum ErrorCode {
     INVALID_GROUP_MEMNBER_COUNT(400,"Group's member count should be greater than 1 at least.",400),
     INVALID_GROUP_MEMNBER_MAX_COUNT(400,"Group's member count is out of max group member count limit.",200),
     INVALID_USER_GROUP_COUNT_LIMIT(1000,"Current user's group count is out of max user group count limit.",200),
-    INVALID_PARAM_CREATOR(400,"Creator is not in memeber list.",400),
-    GROUP_LIMIT_ERROR(20002,"Creator is not in memeber list.",20002),
+    INVALID_PARAM_CREATOR(400,"Creator is not in member list.",400),
+    GROUP_LIMIT_ERROR(20002,"Creator is not in member list.",20002),
     GROUP_UNKNOWN_ERROR(404,"Unknown group.",404),
     NOT_GROUP_MANAGER(400,"Current user is not group manager.",400),
     NOT_GROUP_MEMBER(400,"Not a group member",400),
@@ -109,6 +109,7 @@ public enum ErrorCode {
     GROUPID_NULL(500,"groupId cannot be null.",500),
     MemberProtection_NULL(500,"memberProtection cannot be null.",500),
     STATUS_NULL(500,"status cannot be null.",500),
+    MARKET_EXIST(400,"market already bind other group.",200),
 
 
 
