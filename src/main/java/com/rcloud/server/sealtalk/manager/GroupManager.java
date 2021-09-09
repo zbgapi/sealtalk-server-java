@@ -271,31 +271,13 @@ public class GroupManager extends BaseManager {
             CacheUtil.delete(CacheUtil.USER_GROUP_CACHE_PREFIX + memberId);
         }
 
-        linkMarket(groups);
+        this.eConfigService.configTalkMarket(groups.getMarketName(), groups.getId(), groups.getCreatorId(), null);
 
         //构建返回结果
         GroupAddStatusDTO groupAddStatusDTO = new GroupAddStatusDTO();
         groupAddStatusDTO.setId(N3d.encode(groups.getId()));
         groupAddStatusDTO.setUserStatus(userStatusDTOList);
         return groupAddStatusDTO;
-    }
-
-    public void linkMarket(Groups groups) {
-        try {
-            if (StringUtils.isEmpty(groups.getMarketName())) {
-                return;
-            }
-            String groupId = N3d.encode(groups.getId());
-            String creatorId = N3d.encode(groups.getCreatorId());
-            EConfig config = new EConfig();
-            config.setType(6);
-            config.setCode(groups.getMarketName().toLowerCase());
-            config.setCodeName("hotGroupLink");
-            config.setValue(String.format("/appstore?key=sealtalk://group/join?g=%s&u=%s", groupId, creatorId));
-            this.eConfigService.saveOrUpdate(config);
-        } catch (ServiceException e) {
-            log.error("修改关联市场异常", e);
-        }
     }
 
     public void updateGroup(GroupUpdateParam groupParam) throws ServiceException {
@@ -354,7 +336,8 @@ public class GroupManager extends BaseManager {
 
         CacheUtil.delete(CacheUtil.GROUP_CACHE_PREFIX + groupId);
 
-        linkMarket(groups);
+        Groups g = groupsService.getByPrimaryKey(groupId);
+        this.eConfigService.configTalkMarket(g.getMarketName(), g.getId(), g.getCreatorId(), old.getMarketName());
     }
 
     /**
