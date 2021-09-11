@@ -124,6 +124,7 @@ CREATE TABLE `group_members`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
 
+DROP TABLE IF EXISTS `group_receivers`;
 DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups`
 (
@@ -295,6 +296,6 @@ CREATE TABLE `system_notification`
     `content`          text,
     `createdAt` datetime                                     NOT NULL,
     `updatedAt` datetime                                     NOT NULL,
-    PRIMARY KEY (`id`),
+    PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
