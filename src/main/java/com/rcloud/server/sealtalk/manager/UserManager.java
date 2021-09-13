@@ -378,7 +378,7 @@ public class UserManager extends BaseManager {
         return insertUserList.stream().map(Users::getId).collect(Collectors.toList());
     }
 
-    private void registerRongCloud(Users u) throws ServiceException {
+    private String registerRongCloud(Users u) throws ServiceException {
         if (StringUtils.isEmpty(u.getRongCloudToken())) {
             //如果user表中的融云token为空，调用融云sdk 获取token
             //如果用户头像地址为空，采用默认头像地址
@@ -392,11 +392,15 @@ public class UserManager extends BaseManager {
 
             //获取后根据userId更新表中token
             Users users = new Users();
-            users.setId(users.getId());
+            users.setId(u.getId());
             users.setRongCloudToken(token);
             users.setUpdatedAt(new Date());
             usersService.updateByPrimaryKeySelective(users);
+
+            return token;
         }
+
+        return u.getRongCloudToken();
     }
 
     /**
@@ -467,10 +471,7 @@ public class UserManager extends BaseManager {
             log.error("Error sync user's group list error:" + e.getMessage(), e);
         }
 
-        String token = u.getRongCloudToken();
-        if (StringUtils.isEmpty(token)) {
-            registerRongCloud(u);
-        }
+        String token = registerRongCloud(u);
 
         //返回userId、token
         return Pair.of(u.getId(), token);
