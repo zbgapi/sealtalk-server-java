@@ -187,4 +187,12 @@ public class GroupMembersService extends AbstractBaseService<GroupMembers, Integ
 
         return mapper.queryGroupMembersWithGroupByGroupIdAndMemberId(groupId,memberId);
     }
+
+    public int queryGroupMemberNum(int groupId) {
+        Example example = new Example(GroupMembers.class);
+        example.createCriteria().andEqualTo("groupId", groupId)
+                .andEqualTo("isDeleted", 0);
+
+        return mapper.selectCountByExample(example);
+    }
 }

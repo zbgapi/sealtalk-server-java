@@ -655,10 +655,11 @@ public class GroupManager extends BaseManager {
         transactionTemplate.execute(new TransactionCallback<Boolean>() {
             @Override
             public Boolean doInTransaction(TransactionStatus transactionStatus) {
-                //更新group的群成员数量
-                groupsService.updateMemberCount(groups.getId(), groups.getMemberCount() + userIds.size(), timestamp);
                 //批量插入Groupmember
                 groupMembersService.batchSaveOrUpdate(groupId, userIds, timestamp, null);
+                //更新group的群成员数量
+                int num = groupMembersService.queryGroupMemberNum(groupId);
+                groupsService.updateMemberCount(groups.getId(), num, timestamp);
 
                 //更新GroupReceiver 等待审核状态记录为已过期状态
                 GroupReceivers groupReceivers = new GroupReceivers();
