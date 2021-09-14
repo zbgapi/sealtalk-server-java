@@ -86,7 +86,7 @@ public class GroupMembersService extends AbstractBaseService<GroupMembers, Integ
         //更新已经存在的groupmember
         if (updateGroupMemberIds.size() > 0) {
             GroupMembers groupMembers = new GroupMembers();
-            groupMembers.setRole(GroupRole.MEMBER.getCode());
+//            groupMembers.setRole(GroupRole.MEMBER.getCode());
             groupMembers.setIsDeleted(GroupMembers.IS_DELETED_NO);
             groupMembers.setTimestamp(timestamp);
             groupMembers.setUpdatedAt(new Date());
