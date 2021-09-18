@@ -430,6 +430,10 @@ public class UserManager extends BaseManager {
             }
 
             String nickname = StringUtils.isEmpty(ecUser.getNickName()) ? ecUser.getLoginName() : ecUser.getNickName();
+            if (nickname.equals(ecUser.getLoginName())) {
+                // 产品要求的
+                nickname = MiscUtils.hiddenName(nickname);
+            }
             u = register0(nickname, ecUser.getHeadImg(), region, phone, salt, hashStr);
         }
 

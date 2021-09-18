@@ -193,12 +193,6 @@ public class MiscUtils {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-
-        System.out.println(">>>"+shortUuid());
-    }
-
-
     /**
      * 单个元素转换成数组
      *
@@ -298,5 +292,22 @@ public class MiscUtils {
             builder.append((char) x);
         }
         return builder.toString();
+    }
+
+    public static String hiddenName(String loginName) {
+        try {
+            if (!StringUtils.isBlank(loginName)) {
+                if (RegexUtils.checkEmail(loginName)) {
+                    if (loginName.indexOf("@") > 2) {
+                        loginName = loginName.substring(0, 2) + "***" + loginName.substring(loginName.indexOf("@"));
+                    }
+                } else {
+                    loginName = loginName.substring(0, 3) + "***" + loginName.substring(loginName.length() - 2);
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
+        return loginName;
     }
 }
