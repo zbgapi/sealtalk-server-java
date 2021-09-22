@@ -354,7 +354,7 @@ public class UserManager extends BaseManager {
         List<Users> insertUserList = new ArrayList<>();
         for (EcUser ecUser : notRegisterUserList) {
             Users u = new Users();
-            u.setNickname(MiscUtils.toString(ecUser.getNickName(), ecUser.getLoginName()));
+            u.setNickname(ecUser.getHiddenName());
             u.setRegion("86");
             u.setPhone(ecUser.getUserId());
             int salt = RandomUtil.randomBetween(1000, 9999);
@@ -429,12 +429,7 @@ public class UserManager extends BaseManager {
                 throw new ServiceException(ErrorCode.USER_NOT_EXIST);
             }
 
-            String nickname = StringUtils.isEmpty(ecUser.getNickName()) ? ecUser.getLoginName() : ecUser.getNickName();
-            if (nickname.equals(ecUser.getLoginName())) {
-                // 产品要求的
-                nickname = MiscUtils.hiddenName(nickname);
-            }
-            u = register0(nickname, ecUser.getHeadImg(), region, phone, salt, hashStr);
+            u = register0(ecUser.getHiddenName(), ecUser.getHeadImg(), region, phone, salt, hashStr);
         }
 
         //校验密码是否正确
