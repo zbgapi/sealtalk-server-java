@@ -723,8 +723,8 @@ public class UserController extends BaseController {
         String text = salt + Constants.SEPARATOR_NO + userId + Constants.SEPARATOR_NO + System.currentTimeMillis();
         byte[] value = AES256.encrypt(text, sealtalkConfig.getAuthCookieKey());
         Cookie cookie = new Cookie(sealtalkConfig.getAuthCookieName(), new String(value));
-        cookie.setHttpOnly(true);
-        cookie.setDomain(sealtalkConfig.getAuthCookieDomain());
+//        cookie.setHttpOnly(true);
+//        cookie.setDomain(sealtalkConfig.getAuthCookieDomain());
         cookie.setMaxAge(Integer.valueOf(sealtalkConfig.getAuthCookieMaxAge()));
         cookie.setPath("/");
         response.addCookie(cookie);
